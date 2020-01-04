@@ -1,19 +1,19 @@
 
 public class Dot {
-	int x,y;
+	int row,column;
 	
-	public Dot(int x, int y)
+	public Dot(int row, int column)
 	{
-		this.x=x;
-		this.y=y;
+		this.row=row;
+		this.column = column;
 	}
 	
-	public int getX() {
-		return this.x;
+	public int getRow() {
+		return this.row;
 	}
 	
-	public int getY() {
-		return this.y;
+	public int getColumn() {
+		return this.column;
 	}
 
 }

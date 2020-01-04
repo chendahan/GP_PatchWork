@@ -8,17 +8,26 @@ public class Piece {
 	  private List<Dot> shape;
 	  private int cost;
 	  private int time;
-
+	  private boolean used;
 	  List<Dot> shape_90;
 	  List<Dot> shape_180;
 	  List<Dot> shape_270;
 
-	  Piece(int id, int buttons, int cost, int time,List<Integer> dots) {
+	  public Piece(int id, int buttons, int cost, int time,List<Integer> dots) {
 	    this.id = id;
 	    this.shape = createShape(dots);
 	    this.setButtons(buttons);
 	    this.cost = cost;
 	    this.time = time;
+	    used = false;
+	  }
+	  
+	  public boolean isUsed() {
+		  return used;
+	  }
+	  
+	  public void setUsed() {
+		  this.used = true;
 	  }
 	  
 	  private List<Dot> createShape(List<Integer> dots) {
@@ -85,5 +94,15 @@ public class Piece {
 	public int getTime() {
 		return time;
 	}
+	
+	public boolean equals(Object p) { 
+		  
+		if (p == this)
+		    return true; 
+		if (!(p instanceof Piece)) 
+		    return false; 
+		Piece piece = (Piece) p; 
+	    return piece.getId() == this.getId();     
+	 }  
 }
 

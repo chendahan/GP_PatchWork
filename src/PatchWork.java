@@ -20,7 +20,7 @@ public class PatchWork {
 			Piece p = pieces.get(i);
 			System.out.println("shape id:"+ p.getId());
 			for(Dot sq : p.getShape()) {
-				board[sq.getX()][sq.getY()]="+";
+				board[sq.getRow()][sq.getColumn()]="+";
 			}
 			for (int x=0;x<5;x++)
 			{
@@ -42,7 +42,7 @@ public class PatchWork {
 				}
 				System.out.println("shape 90:"+ p.getId());
 				for(Dot sq : p.getShape_90()) {
-					board[sq.getX()][sq.getY()]="+";
+					board[sq.getRow()][sq.getColumn()]="+";
 				}
 				for (int x=0;x<5;x++)
 				{
@@ -64,7 +64,7 @@ public class PatchWork {
 				}
 				System.out.println("shape 180:"+ p.getId());
 				for(Dot sq : p.getShape_180()) {
-					board[sq.getX()][sq.getY()]="+";
+					board[sq.getRow()][sq.getColumn()]="+";
 				}
 				for (int x=0;x<5;x++)
 				{
@@ -86,7 +86,7 @@ public class PatchWork {
 				}
 				System.out.println("shape 270:"+ p.getId());
 				for(Dot sq : p.getShape_270()) {
-					board[sq.getX()][sq.getY()]="+";
+					board[sq.getRow()][sq.getColumn()]="+";
 				}
 				for (int x=0;x<5;x++)
 				{

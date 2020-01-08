@@ -11,6 +11,14 @@ public class PlayerBoard {
 		this.playerBoard = new boolean[boardSize][boardSize];
 		this.numOfButtons=0;
 	}
+
+	public PlayerBoard(PlayerBoard board) {
+		boolean[][] boardCopy = new boolean[boardSize][];
+		for(int k = 0; k < boardSize; k++)
+			boardCopy[k] = board.playerBoard[k].clone();
+		playerBoard = boardCopy;
+		numOfButtons = board.numOfButtons;
+	}
 	
 	public boolean isLegalPlacement(List<Dot> pieceShape, Dot position) {
 		try {
@@ -31,6 +39,19 @@ public class PlayerBoard {
 		for(Dot dot : pieceShape)
 			playerBoard[position.getRow() + dot.getRow()][position.getColumn() + dot.getColumn()] = true;
 		return true;
+	}
+
+	public int countEmptyCells() {
+		int count = 0;
+		for (int i=0; i < boardSize; i++) {
+			for (int j = 0; j < boardSize; j++) {
+				if (playerBoard[i][j] == false)
+				{
+					count++;
+				}
+			}
+		}
+		return count;
 	}
 }
 

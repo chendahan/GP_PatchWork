@@ -1,3 +1,5 @@
+import io.jenetics.prog.ProgramGene;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -6,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 public class GameManager {
-	
 	private static int boardSize=50;
 	private List<Integer> buttonPositions;
 	private List<Integer> specialPiecePositions;
@@ -22,7 +23,7 @@ public class GameManager {
 		specialPiecePositions=new ArrayList<>(Arrays.asList(10,15,22,30,38));
 		player1=new Player(1);
 		player2=new Player(2);		
-		currentPlayer=1;
+		//currentPlayer=1;
 		pieceIndex=findStartedPiece();//
 	}
 	
@@ -62,7 +63,7 @@ public class GameManager {
 			return false;
 		player.setButtons(player.getButtons()-piece.getButtons());
 		player.setPosition(player.getPosition()+piece.getTime());
-		//TODO: mark piece unav
+		//TODO: mark piece unavailable
 		return true;
 	}
 	
@@ -72,11 +73,111 @@ public class GameManager {
 		return true;
 	}
 	
-	
-	public void MakeAmove()
+
+	// Used by the random player
+	public void makeRandomMove(Player player)
 	{
 		//1- just move
 		
 		//2- place a piece on board
 	}
+
+	public void makeMove(final ProgramGene<Double> program, Player player)
+	{
+		List<Piece> pieces = getNextPiecesAvailableToSelect();
+		PlayerBoard board = player.getPlayerBoard();
+		double max_res = -100000;
+		boolean init_max_res = false;
+		Piece chosen_piece;
+		Dot chosen_coord;
+		for (Piece piece : pieces) {
+			// TODO: take into account all rotations
+//			List<Dot> shape_90;
+//			List<Dot> shape_180;
+//			List<Dot> shape_270;
+			for (int i = 0; i < boardSize; i++) {
+				for (int j = 0; j < boardSize; j++) {
+					Dot dot = new Dot(i, j);
+					List<Dot> pieceShape = piece.getShape();
+					if (board.isLegalPlacement(pieceShape, dot))
+					{
+						PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
+						copy.placePiece(pieceShape, dot); // simulate placement
+						Double[] terminals = new Double[1];
+						// TODO: add terminals
+						// TODO: in the terminals, take into consideration position and buttons (not only board)
+						// terminals[0] = (double) count_empty_corners();
+						double res = program.apply(terminals);
+						if (!init_max_res) {
+							init_max_res = true;
+							max_res = res;
+							chosen_piece = piece;
+							chosen_coord = dot;
+						}
+						else if (res > max_res) {
+							max_res = res;
+							chosen_piece = piece;
+							chosen_coord = dot;
+						}
+					}
+
+				}
+			}
+		}
+		placePiece(player, chosen_piece, chosen_piece.getShape(), chosen_coord);
+	}
+
+	public Results getResults(Player opponent, Player gpPlayer)
+	{
+		int opponentScore = 0;
+		int gpScore = 0;
+		if (opponent.hasSevenBySeven())
+		{
+			opponentScore += 7;
+		} else if (gpPlayer.hasSevenBySeven())
+		{
+			gpScore += 7;
+		}
+		opponentScore += opponent.getButtons();
+		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
+		gpScore += gpPlayer.getButtons();
+		gpScore -= 2 * (gpPlayer.getPlayerBoard().countEmptyCells());
+		Results res = new Results();
+		res.ourPlayerScore = gpScore;
+		res.opponentScore = opponentScore;
+		return res;
+	}
+
+	// TODO: add more statistics about the game to "Results" class
+	public Results playGame(final ProgramGene<Double> program)
+	{
+		Player randomPlayer = new Player(0);
+		Player gpPlayer = new Player(1);
+		int first = (int) (Math.random() * 2);
+		findStartedPiece();
+		int result = 0;
+		boolean gameEnded = false;
+		int i = 0;
+		Player next = player2;
+		// randomly choose first player
+		if (i % 2 == first)
+			next = player1; // player1 is random player
+		while(randomPlayer.getPosition() < boardSize-1 || gpPlayer.getPosition() < boardSize-1) {
+
+			// the player whose turn it is & didn't get to the finish plays
+			if (next == player1) {
+				if (randomPlayer.getPosition() == boardSize-1)
+					continue;
+				makeRandomMove(randomPlayer);
+			} else { // next == player2
+				if (gpPlayer.getPosition() == boardSize-1)
+					continue;
+				makeMove(program, gpPlayer);
+			}
+			i++;
+			next = getNextPlayer();
+		}
+		return getResults(randomPlayer, gpPlayer);
+	}
 }
+

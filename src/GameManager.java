@@ -13,7 +13,7 @@ public class GameManager {
 	private List<Integer> specialPiecePositions;
 	private List<Piece> piecesInCircle;
 	private int pieceIndex; // use index%32 in get
-	private Player player1,player2;
+	private Player opponent, ourPlayer;
 	private int currentPlayer;
 	
 	public GameManager(List<Piece> pieces) {
@@ -21,8 +21,8 @@ public class GameManager {
 		this.piecesInCircle = pieces;
 		buttonPositions=new ArrayList<>(Arrays.asList(5,10,15,20,24,31,36,42,47));
 		specialPiecePositions=new ArrayList<>(Arrays.asList(10,15,22,30,38));
-		player1=new Player(1);
-		player2=new Player(2);		
+		opponent=new Player(1);
+		ourPlayer=new Player(2);
 		//currentPlayer=1;
 		pieceIndex=findStartedPiece();//
 	}
@@ -51,7 +51,8 @@ public class GameManager {
 	}
 	
 	public Player getNextPlayer() {
-		 return player1.getPosition() < player2.getPosition() ? player1 : player2;
+		 return opponent.getPosition() < ourPlayer.getPosition() ?
+				 opponent : ourPlayer;
 	}
 	
 	public boolean canSelectPiece(Piece piece, Player player) {
@@ -88,39 +89,35 @@ public class GameManager {
 		PlayerBoard board = player.getPlayerBoard();
 		double max_res = -100000;
 		boolean init_max_res = false;
-		Piece chosen_piece;
-		Dot chosen_coord;
+		Piece chosen_piece = new Piece();
+		Dot chosen_coord = new Dot();
 		for (Piece piece : pieces) {
-			// TODO: take into account all rotations
-//			List<Dot> shape_90;
-//			List<Dot> shape_180;
-//			List<Dot> shape_270;
 			for (int i = 0; i < boardSize; i++) {
 				for (int j = 0; j < boardSize; j++) {
 					Dot dot = new Dot(i, j);
-					List<Dot> pieceShape = piece.getShape();
-					if (board.isLegalPlacement(pieceShape, dot))
-					{
-						PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
-						copy.placePiece(pieceShape, dot); // simulate placement
-						Double[] terminals = new Double[1];
-						// TODO: add terminals
-						// TODO: in the terminals, take into consideration position and buttons (not only board)
-						// terminals[0] = (double) count_empty_corners();
-						double res = program.apply(terminals);
-						if (!init_max_res) {
-							init_max_res = true;
-							max_res = res;
-							chosen_piece = piece;
-							chosen_coord = dot;
-						}
-						else if (res > max_res) {
-							max_res = res;
-							chosen_piece = piece;
-							chosen_coord = dot;
+					List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
+							piece.getShape_180(), piece.getShape_270());
+					for (List<Dot> pieceShape : shapesList) {
+						if (board.isLegalPlacement(pieceShape, dot)) {
+							PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
+							copy.placePiece(pieceShape, dot); // simulate placement
+							Double[] terminals = new Double[1];
+							// TODO: add terminals
+							// TODO: in the terminals, take into consideration position and buttons (not only board)
+							// terminals[0] = (double) count_empty_corners();
+							double res = program.apply(terminals);
+							if (!init_max_res) {
+								init_max_res = true;
+								max_res = res;
+								chosen_piece = piece;
+								chosen_coord = dot;
+							} else if (res > max_res) {
+								max_res = res;
+								chosen_piece = piece;
+								chosen_coord = dot;
+							}
 						}
 					}
-
 				}
 			}
 		}
@@ -151,33 +148,33 @@ public class GameManager {
 	// TODO: add more statistics about the game to "Results" class
 	public Results playGame(final ProgramGene<Double> program)
 	{
-		Player randomPlayer = new Player(0);
-		Player gpPlayer = new Player(1);
+//		Player randomPlayer = new Player(0);
+//		Player gpPlayer = new Player(1);
 		int first = (int) (Math.random() * 2);
 		findStartedPiece();
 		int result = 0;
 		boolean gameEnded = false;
 		int i = 0;
-		Player next = player2;
+		Player next = ourPlayer;
 		// randomly choose first player
 		if (i % 2 == first)
-			next = player1; // player1 is random player
-		while(randomPlayer.getPosition() < boardSize-1 || gpPlayer.getPosition() < boardSize-1) {
+			next = opponent; // player1 is random player
+		while(opponent.getPosition() < boardSize-1 || ourPlayer.getPosition() < boardSize-1) {
 
 			// the player whose turn it is & didn't get to the finish plays
-			if (next == player1) {
-				if (randomPlayer.getPosition() == boardSize-1)
+			if (next == opponent) {
+				if (opponent.getPosition() == boardSize-1)
 					continue;
-				makeRandomMove(randomPlayer);
+				makeRandomMove(opponent);
 			} else { // next == player2
-				if (gpPlayer.getPosition() == boardSize-1)
+				if (ourPlayer.getPosition() == boardSize-1)
 					continue;
-				makeMove(program, gpPlayer);
+				makeMove(program, ourPlayer);
 			}
 			i++;
 			next = getNextPlayer();
 		}
-		return getResults(randomPlayer, gpPlayer);
+		return getResults(opponent, ourPlayer);
 	}
 }
 

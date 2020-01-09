@@ -91,9 +91,12 @@ public class PatchWork extends JFrame {
 		int sum_moves_till_win = 0;
 		int sum_moves_till_lose = 0;
 		int sum_max_adj = 0;
-		Results res;
+		Results res = new Results();
 		for (int j=0; j < NUM_GAMES; j++) {
-			res = GameManager::playGame();
+			PieceGenerator gen = new PieceGenerator();
+			List<Piece> pieces = gen.getClassicPieces();
+			GameManager game =new GameManager(pieces);
+			res = game.playGame(program);
 		}
 		return res.ourPlayerScore; // TODO: construct more complex fitness function
 	}
@@ -154,10 +157,6 @@ public class PatchWork extends JFrame {
 	}
 
 	public static void main(String[] args) throws InvocationTargetException, InterruptedException {
-		PieceGenerator gen = new PieceGenerator();
-		List<Piece> pieces = gen.getClassicPieces();
-		GameManager boardGame=new GameManager(pieces);
-
 		Engine<ProgramGene<Double>, Double> engine = Engine
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)

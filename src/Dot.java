@@ -1,6 +1,13 @@
 
 public class Dot {
 	int row,column;
+
+	// Uninitialized dot
+	public Dot()
+	{
+		row = -1;
+		column = -1;
+	}
 	
 	public Dot(int row, int column)
 	{

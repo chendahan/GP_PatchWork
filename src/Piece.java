@@ -3,33 +3,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Piece {
-	  private int id;
-	  private int buttons;
-	  private List<Dot> shape;
-	  private int cost;
-	  private int time;
-	  private boolean used;
-	  List<Dot> shape_90;
-	  List<Dot> shape_180;
-	  List<Dot> shape_270;
+	private int id;
+	private int buttons;
+	private List<Dot> shape;
+	private int cost;
+	private int time;
+	private boolean used;
+	List<Dot> shape_90;
+	List<Dot> shape_180;
+	List<Dot> shape_270;
 
-	  public Piece(int id, int buttons, int cost, int time,List<Integer> dots) {
-	    this.id = id;
-	    this.shape = createShape(dots);
-	    this.setButtons(buttons);
-	    this.cost = cost;
-	    this.time = time;
-	    used = false;
-	  }
-	  
+	  // Default consructor for uninitialized pieces (placeholder)
+	public Piece() {
+		id = -1;
+	}
+
+	public Piece(int id, int buttons, int cost, int time,List<Integer> dots) {
+	  this.id = id;
+	  this.shape = createShape(dots);
+	  this.setButtons(buttons);
+	  this.cost = cost;
+	  this.time = time;
+	  used = false;
+	}
+
 	  public boolean isUsed() {
 		  return used;
 	  }
-	  
+
 	  public void setUsed() {
 		  this.used = true;
 	  }
-	  
+
 	  private List<Dot> createShape(List<Integer> dots) {
 		  int i=dots.size();
 		  List<Dot> list = new ArrayList<Dot>();
@@ -40,29 +45,29 @@ public class Piece {
 			  list.add(dotToAdd);
 			  i-=2;
 		  }
-		  
+
 		return list;
 	}
-	  
+
 	 public void setShape_90(List<Integer> dots)
 	 {
-		    this.shape_90 = createShape(dots);
+			this.shape_90 = createShape(dots);
 	 }
 
 	 public void setShape_180(List<Integer> dots)
 	 {
-		    this.shape_180 = createShape(dots);
+			this.shape_180 = createShape(dots);
 	 }
-	 
+
 	 public void setShape_270(List<Integer> dots)
 	 {
-		    this.shape_270 = createShape(dots);
+			this.shape_270 = createShape(dots);
 	 }
-	 
+
 	public int getId(){
 		  return id;
 	  }
-	
+
 	public List<Dot> getShape(){
 		  return shape;
 	  }
@@ -74,11 +79,11 @@ public class Piece {
 	public List<Dot> getShape_180(){
 		  return shape_180;
 	  }
-	
+
 	public List<Dot> getShape_270(){
 		  return shape_270;
 	  }
-	
+
 	public int getButtons() {
 		return buttons;
 	}
@@ -94,15 +99,14 @@ public class Piece {
 	public int getTime() {
 		return time;
 	}
-	
-	public boolean equals(Object p) { 
-		  
+
+	public boolean equals(Object p) {
 		if (p == this)
-		    return true; 
-		if (!(p instanceof Piece)) 
-		    return false; 
-		Piece piece = (Piece) p; 
-	    return piece.getId() == this.getId();     
-	 }  
+			return true;
+		if (!(p instanceof Piece))
+			return false;
+		Piece piece = (Piece) p;
+		return piece.getId() == this.getId();
+	}
 }
 

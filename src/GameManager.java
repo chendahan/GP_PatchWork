@@ -9,6 +9,7 @@ import java.util.Map;
 
 public class GameManager {
 	private static int boardSize=50;
+	private static int playerBoardSize=9;
 	private List<Integer> buttonPositions;
 	private List<Integer> specialPiecePositions;
 	private List<Piece> piecesInCircle;
@@ -39,6 +40,7 @@ public class GameManager {
 	public List<Piece> getNextPiecesAvailableToSelect(){
 		int counter = 0;
 		int index = pieceIndex;
+		//System.out.println("pieceIndex: " + index);
 		List<Piece> NextAvailablePieces = new ArrayList<>();
 		while(counter!=3) {
 			if(!piecesInCircle.get(index).isUsed()) {
@@ -62,6 +64,8 @@ public class GameManager {
 	public int countNewButtons(int newPosition, Player player) {
 		int nextButtonIndex = player.getLastButtonIndex() + 1;
 		if (newPosition >= buttonPositions.get(nextButtonIndex)) {
+			// collect buttons
+			player.setLastButtonIndex(nextButtonIndex);
 			return player.getButtons() + player.getPlayerBoard().getButtons();
 		}
 		return player.getButtons();
@@ -86,7 +90,7 @@ public class GameManager {
 		int prev_pos = player.getPosition();
 		player.setPosition(position);
 		int numStepsToMove = position - prev_pos;
-		int newButtons = numStepsToMove + countNewButtons(position, player));
+		int newButtons = numStepsToMove + countNewButtons(position, player);
 		player.setButtons(newButtons);
 	}
 
@@ -208,8 +212,8 @@ public class GameManager {
 			gpScore += 7;
 		}
 		opponentScore += opponent.getButtons();
-		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
 		gpScore += gpPlayer.getButtons();
+		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
 		gpScore -= 2 * (gpPlayer.getPlayerBoard().countEmptyCells());
 		Results res = new Results();
 		res.ourPlayerScore = gpScore;
@@ -220,19 +224,13 @@ public class GameManager {
 	// TODO: add more statistics about the game to "Results" class
 	public Results playGame(final ProgramGene<Double> program)
 	{
-//		Player randomPlayer = new Player(0);
-//		Player gpPlayer = new Player(1);
 		int first = (int) (Math.random() * 2);
-		findStartedPiece();
-		int result = 0;
-		boolean gameEnded = false;
 		int i = 0;
 		Player next = ourPlayer;
 		// randomly choose first player
 		if (i % 2 == first)
 			next = opponent; // player1 is random player
 		while(opponent.getPosition() < boardSize-1 || ourPlayer.getPosition() < boardSize-1) {
-
 			// the player whose turn it is & didn't get to the finish plays
 			if (next == opponent) {
 				if (opponent.getPosition() == boardSize-1)

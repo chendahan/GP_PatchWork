@@ -8,6 +8,8 @@ public class PlayerBoard {
 
 	private int numOfButtons;
 
+	public boolean getCell(int i, int j) { return playerBoard[i][j]; }
+
 	public int getButtons() { return numOfButtons; }
 	
 	public PlayerBoard(Player player) {

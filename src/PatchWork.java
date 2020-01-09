@@ -62,25 +62,10 @@ public class PatchWork extends JFrame {
 	);
 
 	static final ISeq<Op<Double>> TERMINALS = ISeq.of(
-			// x: the sum of penalties for all queens (queen's penalty - the number of queens she can check)
-			// y:
-			Var.of("a", 0),
 			EphemeralConst.of(() ->
 					(double)RandomRegistry.getRandom().nextInt(10)),
-			Var.of("b", 1),
-			Var.of("c", 2),
-			Var.of("d", 3),
-			Var.of("e", 4),
-			Var.of("f", 5),
-			Var.of("g", 6),
-			Var.of("h", 7),
-			Var.of("i", 8),
-			Var.of("j", 9),
-			Var.of("k", 10),
-			Var.of("l", 11),
-			Var.of("m", 12),
-			Var.of("n", 13)
-//            Var.of("o", 14)
+			Var.of("a", 0),
+			Var.of("b", 1)
 	);
 
 

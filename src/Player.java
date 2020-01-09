@@ -15,7 +15,7 @@ public class Player {
         this.playerBoard = new PlayerBoard(this);
         this.position = 0;
         // save the index of the last button position the player visited
-        this.lastButtonIndex = 0;
+        this.lastButtonIndex = -1; // initialized to -1 because initially no buttons were collected
     }
 
     public boolean hasSevenBySeven() {
@@ -28,6 +28,10 @@ public class Player {
 
     public int getLastButtonIndex() {
         return lastButtonIndex;
+    }
+
+    public void setLastButtonIndex(int idx) {
+        lastButtonIndex = idx;
     }
 
     public void setPosition(int position) {

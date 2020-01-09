@@ -15,7 +15,7 @@ public class GameManager {
 	private int pieceIndex; // use index%32 in get
 	private Player opponent, ourPlayer;
 	private int currentPlayer;
-	
+
 	public GameManager(List<Piece> pieces) {
 		Collections.shuffle(pieces);
 		this.piecesInCircle = pieces;
@@ -58,16 +58,39 @@ public class GameManager {
 	public boolean canSelectPiece(Piece piece, Player player) {
 	    return piece.getCost() > player.getButtons() ? false : true;
 	}
-	
-	public boolean placePiece(Player player, Piece piece, List<Dot> pieceShape, Dot position) {
-		if(!player.getPlayerBoard().placePiece(pieceShape, position))
-			return false;
-		player.setButtons(player.getButtons()-piece.getButtons());
-		player.setPosition(player.getPosition()+piece.getTime());
-		//TODO: mark piece unavailable
-		return true;
+
+	public int countNewButtons(int newPosition, Player player) {
+		int nextButtonIndex = player.getLastButtonIndex() + 1;
+		if (newPosition >= buttonPositions.get(nextButtonIndex)) {
+			return player.getButtons() + player.getPlayerBoard().getButtons();
+		}
+		return player.getButtons();
 	}
-	
+
+	public void placePiece(Player player, PieceAndCoord pieceAndCoord) {
+//		if(!player.getPlayerBoard().placePiece(pieceShape, position))
+//			return false;
+		// TODO: update pieceIndex
+		Piece piece = pieceAndCoord.piece;
+		Dot position = pieceAndCoord.coord;
+		List<Dot> pieceShape = pieceAndCoord.shape;
+		player.getPlayerBoard().placePiece(piece, pieceShape, position);
+		int newPosition = player.getPosition()+piece.getTime();
+		player.setButtons(player.getButtons()-piece.getButtons()+countNewButtons(newPosition, player));
+		player.setPosition(newPosition);
+		piecesInCircle.get(piece.getId()).setUsed();
+
+		//return true;
+	}
+
+	public void moveNoPiece(Player player, int position) {
+		int prev_pos = player.getPosition();
+		player.setPosition(position);
+		int numStepsToMove = position - prev_pos;
+		int newButtons = numStepsToMove + countNewButtons(position, player));
+		player.setButtons(newButtons);
+	}
+
 	public boolean possiblePiecesPlacements(Player player) {
 		
 		
@@ -78,20 +101,45 @@ public class GameManager {
 	// Used by the random player
 	public void makeRandomMove(Player player)
 	{
-		//1- just move
-		
-		//2- place a piece on board
+		List<Piece> pieces = getNextPiecesAvailableToSelect();
+		PlayerBoard board = ourPlayer.getPlayerBoard();
+		List<PieceAndCoord> availablePieces = new ArrayList<>();
+		for (Piece piece : pieces) {
+			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
+				continue;
+			for (int i = 0; i < boardSize; i++) {
+				for (int j = 0; j < boardSize; j++) {
+					Dot dot = new Dot(i, j);
+					List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
+							piece.getShape_180(), piece.getShape_270());
+					for (List<Dot> pieceShape : shapesList) {
+						if (board.isLegalPlacement(pieceShape, dot)) {
+							PieceAndCoord option = new PieceAndCoord(piece, dot, pieceShape);
+							availablePieces.add(option);
+						}
+					}
+				}
+			}
+		}
+		if (availablePieces.size() == 0)
+			moveNoPiece(opponent, ourPlayer.getPosition() + 1);
+		// else, place piece
+		int index = (int)(Math.random() * availablePieces.size());
+		PieceAndCoord chosenPiece = availablePieces.get(index);
 	}
 
-	public void makeMove(final ProgramGene<Double> program, Player player)
+	public void makeMove(final ProgramGene<Double> program)
 	{
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
-		PlayerBoard board = player.getPlayerBoard();
+		PlayerBoard board = ourPlayer.getPlayerBoard();
 		double max_res = -100000;
 		boolean init_max_res = false;
-		Piece chosen_piece = new Piece();
-		Dot chosen_coord = new Dot();
+		PieceAndCoord chosenPiece = new PieceAndCoord();
+		boolean firstOption = true;
+		// First option: place a piece
 		for (Piece piece : pieces) {
+			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
+				continue;
 			for (int i = 0; i < boardSize; i++) {
 				for (int j = 0; j < boardSize; j++) {
 					Dot dot = new Dot(i, j);
@@ -100,28 +148,42 @@ public class GameManager {
 					for (List<Dot> pieceShape : shapesList) {
 						if (board.isLegalPlacement(pieceShape, dot)) {
 							PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
-							copy.placePiece(pieceShape, dot); // simulate placement
-							Double[] terminals = new Double[1];
-							// TODO: add terminals
-							// TODO: in the terminals, take into consideration position and buttons (not only board)
-							// terminals[0] = (double) count_empty_corners();
+							copy.placePiece(piece, pieceShape, dot); // simulate placement
+							Double[] terminals = new Double[2];
+							int new_pos = ourPlayer.getPosition() + piece.getTime();
+							terminals[0] = (double)(new_pos); // new position
+							terminals[1] = (double)(ourPlayer.getButtons() - piece.getCost() +
+											countNewButtons(new_pos, ourPlayer)); // new amount of buttons
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
 								max_res = res;
-								chosen_piece = piece;
-								chosen_coord = dot;
+								chosenPiece = new PieceAndCoord(piece, dot, pieceShape);
 							} else if (res > max_res) {
 								max_res = res;
-								chosen_piece = piece;
-								chosen_coord = dot;
+								chosenPiece = new PieceAndCoord(piece, dot, pieceShape);
 							}
 						}
 					}
 				}
 			}
 		}
-		placePiece(player, chosen_piece, chosen_piece.getShape(), chosen_coord);
+		// Second option: just advance the player to get buttons (intuitively, this should be used only when
+		// the player has no / very little buttons left
+		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
+		Double[] terminals = new Double[2];
+		terminals[0] = (double) (opponent.getPosition() + 1); // new position
+		terminals[1] = (double) (ourPlayer.getButtons() + numStepsToMove +
+				countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons
+		double res = program.apply(terminals);
+		if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
+			firstOption = false;
+		}
+		if (firstOption)
+			placePiece(ourPlayer, chosenPiece);
+		else
+			moveNoPiece(ourPlayer, opponent.getPosition() + 1);
+
 	}
 
 	public Results getResults(Player opponent, Player gpPlayer)
@@ -169,7 +231,7 @@ public class GameManager {
 			} else { // next == player2
 				if (ourPlayer.getPosition() == boardSize-1)
 					continue;
-				makeMove(program, ourPlayer);
+				makeMove(program);
 			}
 			i++;
 			next = getNextPlayer();

@@ -5,7 +5,10 @@ public class PlayerBoard {
 	private SquarePlayerBoard[][] squarePlayerBoards;
 	private boolean [][] playerBoard;
 	static int boardSize=9;
-	int numOfButtons;
+
+	private int numOfButtons;
+
+	public int getButtons() { return numOfButtons; }
 	
 	public PlayerBoard(Player player) {
 		this.playerBoard = new boolean[boardSize][boardSize];
@@ -33,12 +36,14 @@ public class PlayerBoard {
 		return true;
 	}
 	
-	public boolean placePiece(List<Dot> pieceShape, Dot position) {
-		if(!isLegalPlacement(pieceShape,position))
-			return false;
+	public void placePiece(Piece piece, List<Dot> pieceShape, Dot position) {
+//		if(!isLegalPlacement(pieceShape,position))
+//			return false;
 		for(Dot dot : pieceShape)
 			playerBoard[position.getRow() + dot.getRow()][position.getColumn() + dot.getColumn()] = true;
-		return true;
+		// update buttons
+		numOfButtons += piece.getButtons();
+		//return true;
 	}
 
 	public int countEmptyCells() {

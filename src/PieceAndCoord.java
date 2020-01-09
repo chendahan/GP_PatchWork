@@ -5,11 +5,13 @@ public class PieceAndCoord {
     Piece piece;
     Dot coord;
     List<Dot> shape;
+    int index = 0;
 
-    public PieceAndCoord(Piece piece, Dot coord, List<Dot> shape) {
+    public PieceAndCoord(Piece piece, Dot coord, List<Dot> shape, int index) {
         this.piece = piece;
         this.coord = coord;
         this.shape = shape;
+        this.index = index;
     }
 
     public PieceAndCoord() {

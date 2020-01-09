@@ -70,7 +70,6 @@ public class GameManager {
 	public void placePiece(Player player, PieceAndCoord pieceAndCoord) {
 //		if(!player.getPlayerBoard().placePiece(pieceShape, position))
 //			return false;
-		// TODO: update pieceIndex
 		Piece piece = pieceAndCoord.piece;
 		Dot position = pieceAndCoord.coord;
 		List<Dot> pieceShape = pieceAndCoord.shape;
@@ -79,7 +78,7 @@ public class GameManager {
 		player.setButtons(player.getButtons()-piece.getButtons()+countNewButtons(newPosition, player));
 		player.setPosition(newPosition);
 		piecesInCircle.get(piece.getId()).setUsed();
-
+		pieceIndex = pieceAndCoord.index;
 		//return true;
 	}
 
@@ -99,38 +98,48 @@ public class GameManager {
 	
 
 	// Used by the random player
-	public void makeRandomMove(Player player)
+	public void makeRandomMove()
 	{
-		List<Piece> pieces = getNextPiecesAvailableToSelect();
-		PlayerBoard board = ourPlayer.getPlayerBoard();
-		List<PieceAndCoord> availablePieces = new ArrayList<>();
-		for (Piece piece : pieces) {
-			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
-				continue;
-			for (int i = 0; i < boardSize; i++) {
-				for (int j = 0; j < boardSize; j++) {
-					Dot dot = new Dot(i, j);
-					List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
-							piece.getShape_180(), piece.getShape_270());
-					for (List<Dot> pieceShape : shapesList) {
-						if (board.isLegalPlacement(pieceShape, dot)) {
-							PieceAndCoord option = new PieceAndCoord(piece, dot, pieceShape);
-							availablePieces.add(option);
+		int placePiece = (int) (Math.random() * 2);
+		if (placePiece == 1) {
+			List<Piece> pieces = getNextPiecesAvailableToSelect();
+			PlayerBoard board = ourPlayer.getPlayerBoard();
+			List<PieceAndCoord> availablePieces = new ArrayList<>();
+			int index = pieceIndex;
+			for (Piece piece : pieces) {
+				if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
+					continue;
+				for (int i = 0; i < boardSize; i++) {
+					for (int j = 0; j < boardSize; j++) {
+						Dot dot = new Dot(i, j);
+						List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
+								piece.getShape_180(), piece.getShape_270());
+						for (List<Dot> pieceShape : shapesList) {
+							if (board.isLegalPlacement(pieceShape, dot)) {
+								PieceAndCoord option = new PieceAndCoord(piece, dot, pieceShape, index);
+								availablePieces.add(option);
+							}
 						}
 					}
 				}
+				index++;
+			}
+			if (availablePieces.size() != 0) {
+				int chosenAtIndex = (int) (Math.random() * availablePieces.size());
+				PieceAndCoord chosenPiece = availablePieces.get(chosenAtIndex);
+				placePiece(opponent, chosenPiece);
+				return;
 			}
 		}
-		if (availablePieces.size() == 0)
-			moveNoPiece(opponent, ourPlayer.getPosition() + 1);
-		// else, place piece
-		int index = (int)(Math.random() * availablePieces.size());
-		PieceAndCoord chosenPiece = availablePieces.get(index);
+		// If there are no available pieces or placePiece is false
+		moveNoPiece(opponent, ourPlayer.getPosition() + 1);
+
 	}
 
 	public void makeMove(final ProgramGene<Double> program)
 	{
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
+		int index = pieceIndex;
 		PlayerBoard board = ourPlayer.getPlayerBoard();
 		double max_res = -100000;
 		boolean init_max_res = false;
@@ -158,15 +167,16 @@ public class GameManager {
 							if (!init_max_res) {
 								init_max_res = true;
 								max_res = res;
-								chosenPiece = new PieceAndCoord(piece, dot, pieceShape);
+								chosenPiece = new PieceAndCoord(piece, dot, pieceShape, index);
 							} else if (res > max_res) {
 								max_res = res;
-								chosenPiece = new PieceAndCoord(piece, dot, pieceShape);
+								chosenPiece = new PieceAndCoord(piece, dot, pieceShape, index);
 							}
 						}
 					}
 				}
 			}
+			index++;
 		}
 		// Second option: just advance the player to get buttons (intuitively, this should be used only when
 		// the player has no / very little buttons left
@@ -227,7 +237,7 @@ public class GameManager {
 			if (next == opponent) {
 				if (opponent.getPosition() == boardSize-1)
 					continue;
-				makeRandomMove(opponent);
+				makeRandomMove();
 			} else { // next == player2
 				if (ourPlayer.getPosition() == boardSize-1)
 					continue;

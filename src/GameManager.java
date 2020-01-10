@@ -109,11 +109,11 @@ public class GameManager {
 		int placePiece = (int) (Math.random() * 2);
 		if (placePiece == 1) {
 			List<Piece> pieces = getNextPiecesAvailableToSelect();
-			PlayerBoard board = ourPlayer.getPlayerBoard();
+			PlayerBoard board = opponent.getPlayerBoard();
 			List<PieceAndCoord> availablePieces = new ArrayList<>();
 			int index = 0;
 			for (Piece piece : pieces) {
-				if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
+				if (!canSelectPiece(piece, opponent)) // skip too expensive pieces
 					continue;
 				for (int i = 0; i < playerBoardSize; i++) {
 					for (int j = 0; j < playerBoardSize; j++) {

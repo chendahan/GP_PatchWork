@@ -74,6 +74,46 @@ public class GameManager {
 		return player.getButtons();
 	}
 
+	public int countEmptyCorners(PlayerBoard board) 
+	{
+		int count=0;
+		count += board.getCell(this.playerBoardSize-1,0) ? 0: 1;
+		count += board.getCell(0,this.playerBoardSize-1) ? 0: 1;
+		count += board.getCell(0,0) ? 0: 1;
+		count += board.getCell(this.playerBoardSize-1,this.playerBoardSize-1) ? 0: 1;
+		
+		return count;
+	}
+
+
+	public int countCoveredFrame(PlayerBoard board) 
+	{
+		int count=0;
+		for (int i=0;i<this.playerBoardSize; i++)
+		{
+			count += board.getCell(i,0) ? 1: 0;
+			count += board.getCell(0,i) ? 1: 0;
+			count += board.getCell(i,this.playerBoardSize-1) ? 1: 0;
+			count += board.getCell(this.playerBoardSize-1,i) ? 1: 0;
+		}
+		
+		return count;
+	}
+	
+	public int countFreeCells(PlayerBoard board) 
+	{
+		int count=0;
+		for (int i=0;i<this.playerBoardSize; i++)
+		{
+			for (int j=0;j<this.playerBoardSize; j++)
+			{
+				count += board.getCell(i,j) ? 0: 1;
+			}
+		}
+		
+		return count;
+	}
+	
 	public void placePiece(Player player, PieceAndCoord pieceAndCoord) {
 //		if(!player.getPlayerBoard().placePiece(pieceShape, position))
 //			return false;
@@ -151,6 +191,7 @@ public class GameManager {
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
 		boolean firstOption = true;
+		Double[] terminals = new Double[6];
 		// First option: place a piece
 		for (Piece piece : pieces) {
 			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
@@ -164,11 +205,14 @@ public class GameManager {
 						if (board.isLegalPlacement(pieceShape, dot)) {
 							PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
 							copy.placePiece(piece, pieceShape, dot); // simulate placement
-							Double[] terminals = new Double[2];
 							int new_pos = ourPlayer.getPosition() + piece.getTime();
 							terminals[0] = (double)(new_pos); // new position
 							terminals[1] = (double)(countNewButtons(new_pos, ourPlayer) -
 											piece.getCost()); // new amount of buttons
+							terminals[2]= (double)(countEmptyCorners(copy));
+							terminals[3]= (double)(countCoveredFrame(copy));
+							terminals[4]= (double)(pieceShape.size());
+							terminals[5]= (double)(countFreeCells(copy));
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -187,10 +231,13 @@ public class GameManager {
 		// Second option: just advance the player to get buttons (intuitively, this should be used only when
 		// the player has no / very little buttons left
 		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
-		Double[] terminals = new Double[2];
 		terminals[0] = (double) (opponent.getPosition() + 1); // new position
 		terminals[1] = (double) (numStepsToMove +
 				countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons
+		terminals[2]= (double)(countEmptyCorners(board));
+		terminals[3]= (double)(countCoveredFrame(board));
+		terminals[4]= (double)(0);//pieceShape.size()- no shape 
+		terminals[5]= (double)(countFreeCells(board));
 		double res = program.apply(terminals);
 		if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
 			firstOption = false;

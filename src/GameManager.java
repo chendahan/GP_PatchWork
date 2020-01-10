@@ -38,18 +38,20 @@ public class GameManager {
 	}
 	
 	public List<Piece> getNextPiecesAvailableToSelect(){
-		int counter = 0;
-		int index = pieceIndex;
 		//System.out.println("pieceIndex: " + index);
 		List<Piece> NextAvailablePieces = new ArrayList<>();
-		while(counter!=3) {
-			if(!piecesInCircle.get(index).isUsed()) {
-				NextAvailablePieces.add(piecesInCircle.get(index));
-				counter++;
-			}
-			index = index == 31 ? 0 : index+1;
+		for(int i=0;i<3;i++)
+		{
+			NextAvailablePieces.add(this.piecesInCircle.get((this.pieceIndex+i)%this.piecesInCircle.size()));
 		}
 		return NextAvailablePieces;
+	}
+	
+	//0/1/2
+	public void updateUsedPiece(int indxUsed)
+	{
+		this.piecesInCircle.remove((indxUsed+this.pieceIndex)%this.piecesInCircle.size());
+		pieceIndex=(indxUsed+pieceIndex)%this.piecesInCircle.size();
 	}
 	
 	public Player getNextPlayer() {
@@ -82,8 +84,7 @@ public class GameManager {
 		int newPosition = player.getPosition()+piece.getTime();
 		player.setButtons(countNewButtons(newPosition, player)-piece.getButtons());
 		player.setPosition(newPosition);
-		piecesInCircle.get(piece.getId()).setUsed();
-		pieceIndex = pieceAndCoord.index;
+		updateUsedPiece(pieceAndCoord.index);
 		//return true;
 	}
 
@@ -110,7 +111,7 @@ public class GameManager {
 			List<Piece> pieces = getNextPiecesAvailableToSelect();
 			PlayerBoard board = ourPlayer.getPlayerBoard();
 			List<PieceAndCoord> availablePieces = new ArrayList<>();
-			int index = pieceIndex;
+			int index = 0;
 			for (Piece piece : pieces) {
 				if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
 					continue;
@@ -144,7 +145,7 @@ public class GameManager {
 	public void makeMove(final ProgramGene<Double> program)
 	{
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
-		int index = pieceIndex;
+		int index = 0;
 		PlayerBoard board = ourPlayer.getPlayerBoard();
 		double max_res = -100000;
 		boolean init_max_res = false;

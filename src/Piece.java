@@ -8,7 +8,6 @@ public class Piece {
 	private List<Dot> shape;
 	private int cost;
 	private int time;
-	private boolean used;
 	List<Dot> shape_90;
 	List<Dot> shape_180;
 	List<Dot> shape_270;
@@ -24,16 +23,7 @@ public class Piece {
 	  this.setButtons(buttons);
 	  this.cost = cost;
 	  this.time = time;
-	  used = false;
 	}
-
-	  public boolean isUsed() {
-		  return used;
-	  }
-
-	  public void setUsed() {
-		  this.used = true;
-	  }
 
 	  private List<Dot> createShape(List<Integer> dots) {
 		  int i=dots.size();

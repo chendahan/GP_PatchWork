@@ -40,7 +40,8 @@ public class GameManager {
 	public List<Piece> getNextPiecesAvailableToSelect(){
 		//System.out.println("pieceIndex: " + index);
 		List<Piece> NextAvailablePieces = new ArrayList<>();
-		for(int i=0;i<3;i++)
+		int min= Math.min(3,piecesInCircle.size() );
+		for(int i=0;i<min;i++)
 		{
 			NextAvailablePieces.add(this.piecesInCircle.get((this.pieceIndex+i)%this.piecesInCircle.size()));
 		}
@@ -51,7 +52,10 @@ public class GameManager {
 	public void updateUsedPiece(int indxUsed)
 	{
 		this.piecesInCircle.remove((indxUsed+this.pieceIndex)%this.piecesInCircle.size());
-		pieceIndex=(indxUsed+pieceIndex)%this.piecesInCircle.size();
+		if(this.piecesInCircle.size()==0)
+			pieceIndex=0;
+		else
+			pieceIndex=(indxUsed+pieceIndex)%this.piecesInCircle.size();
 	}
 	
 	public Player getNextPlayer() {
@@ -249,7 +253,10 @@ public class GameManager {
 				firstOption = false;
 			}
 		}
-		
+		if(this.piecesInCircle.size()==1)
+		{
+			System.out.println("check chosenPiece ");
+		}
 		if (firstOption)
 			placePiece(ourPlayer, chosenPiece);
 		else

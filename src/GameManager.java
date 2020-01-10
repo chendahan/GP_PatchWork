@@ -63,7 +63,8 @@ public class GameManager {
 
 	public int countNewButtons(int newPosition, Player player) {
 		int nextButtonIndex = player.getLastButtonIndex() + 1;
-		if (newPosition >= buttonPositions.get(nextButtonIndex)) {
+		// Skip if passed all buttons already
+		if (nextButtonIndex < 9 && newPosition >= buttonPositions.get(nextButtonIndex)) {
 			// collect buttons
 			player.setLastButtonIndex(nextButtonIndex);
 			return player.getButtons() + player.getPlayerBoard().getButtons();
@@ -79,7 +80,7 @@ public class GameManager {
 		List<Dot> pieceShape = pieceAndCoord.shape;
 		player.getPlayerBoard().placePiece(piece, pieceShape, position);
 		int newPosition = player.getPosition()+piece.getTime();
-		player.setButtons(player.getButtons()-piece.getButtons()+countNewButtons(newPosition, player));
+		player.setButtons(countNewButtons(newPosition, player)-piece.getButtons());
 		player.setPosition(newPosition);
 		piecesInCircle.get(piece.getId()).setUsed();
 		pieceIndex = pieceAndCoord.index;
@@ -113,8 +114,8 @@ public class GameManager {
 			for (Piece piece : pieces) {
 				if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
 					continue;
-				for (int i = 0; i < boardSize; i++) {
-					for (int j = 0; j < boardSize; j++) {
+				for (int i = 0; i < playerBoardSize; i++) {
+					for (int j = 0; j < playerBoardSize; j++) {
 						Dot dot = new Dot(i, j);
 						List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
 								piece.getShape_180(), piece.getShape_270());
@@ -153,8 +154,8 @@ public class GameManager {
 		for (Piece piece : pieces) {
 			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
 				continue;
-			for (int i = 0; i < boardSize; i++) {
-				for (int j = 0; j < boardSize; j++) {
+			for (int i = 0; i < playerBoardSize; i++) {
+				for (int j = 0; j < playerBoardSize; j++) {
 					Dot dot = new Dot(i, j);
 					List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
 							piece.getShape_180(), piece.getShape_270());
@@ -165,8 +166,8 @@ public class GameManager {
 							Double[] terminals = new Double[2];
 							int new_pos = ourPlayer.getPosition() + piece.getTime();
 							terminals[0] = (double)(new_pos); // new position
-							terminals[1] = (double)(ourPlayer.getButtons() - piece.getCost() +
-											countNewButtons(new_pos, ourPlayer)); // new amount of buttons
+							terminals[1] = (double)(countNewButtons(new_pos, ourPlayer) -
+											piece.getCost()); // new amount of buttons
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -187,7 +188,7 @@ public class GameManager {
 		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
 		Double[] terminals = new Double[2];
 		terminals[0] = (double) (opponent.getPosition() + 1); // new position
-		terminals[1] = (double) (ourPlayer.getButtons() + numStepsToMove +
+		terminals[1] = (double) (numStepsToMove +
 				countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons
 		double res = program.apply(terminals);
 		if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
@@ -213,8 +214,12 @@ public class GameManager {
 		}
 		opponentScore += opponent.getButtons();
 		gpScore += gpPlayer.getButtons();
+		System.out.println("Opponent buttons: " + opponentScore);
+		System.out.println("GP buttons: " + gpScore);
 		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
 		gpScore -= 2 * (gpPlayer.getPlayerBoard().countEmptyCells());
+		System.out.println("Opponent score: " + opponentScore);
+		System.out.println("GP score: " + gpScore);
 		Results res = new Results();
 		res.ourPlayerScore = gpScore;
 		res.opponentScore = opponentScore;

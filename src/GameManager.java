@@ -146,12 +146,18 @@ public class GameManager {
 	// Used by the random player
 	public void makeRandomMove()
 	{
-		int placePiece = (int) (Math.random() * 2);
+		int placePiece;
+		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
+		if (numStepsToMove < 1) {
+			placePiece = 1; // if opponent is already ahead of the other player, can only place a new piece
+		}
+		else // if both options are available, choose randomly which option to take
+			placePiece = (int) (Math.random() * 2);
 		if (placePiece == 1) {
 			List<Piece> pieces = getNextPiecesAvailableToSelect();
 			PlayerBoard board = opponent.getPlayerBoard();
 			List<PieceAndCoord> availablePieces = new ArrayList<>();
-			int index = 0;
+			int index = pieceIndex;
 			for (Piece piece : pieces) {
 				if (!canSelectPiece(piece, opponent)) // skip too expensive pieces
 					continue;
@@ -185,7 +191,7 @@ public class GameManager {
 	public void makeMove(final ProgramGene<Double> program)
 	{
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
-		int index = 0;
+		int index = pieceIndex;
 		PlayerBoard board = ourPlayer.getPlayerBoard();
 		double max_res = -100000;
 		boolean init_max_res = false;
@@ -228,20 +234,22 @@ public class GameManager {
 			}
 			index++;
 		}
-		// Second option: just advance the player to get buttons (intuitively, this should be used only when
-		// the player has no / very little buttons left
+		// Second option: just advance the player to get buttons
 		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
-		terminals[0] = (double) (opponent.getPosition() + 1); // new position
-		terminals[1] = (double) (numStepsToMove +
-				countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons
-		terminals[2]= (double)(countEmptyCorners(board));
-		terminals[3]= (double)(countCoveredFrame(board));
-		terminals[4]= (double)(0);//pieceShape.size()- no shape 
-		terminals[5]= (double)(countFreeCells(board));
-		double res = program.apply(terminals);
-		if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
-			firstOption = false;
+		if (numStepsToMove > 0) { // can use this option only if player is behind the opponent
+			terminals[0] = (double) (opponent.getPosition() + 1); // new position
+			terminals[1] = (double) (numStepsToMove +
+					countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons
+			terminals[2]= (double)(countEmptyCorners(board));
+			terminals[3]= (double)(countCoveredFrame(board));
+			terminals[4]= (double)(0);//pieceShape.size()- no shape 
+			terminals[5]= (double)(countFreeCells(board));
+			double res = program.apply(terminals);
+			if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
+				firstOption = false;
+			}
 		}
+		
 		if (firstOption)
 			placePiece(ourPlayer, chosenPiece);
 		else
@@ -294,7 +302,6 @@ public class GameManager {
 					continue;
 				makeMove(program);
 			}
-			i++;
 			next = getNextPlayer();
 		}
 		return getResults(opponent, ourPlayer);

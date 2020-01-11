@@ -331,14 +331,14 @@ public class GameManager {
 		}
 		opponentScore += opponent.getButtons();
 		gpScore += gpPlayer.getButtons();
-		System.out.println("Opponent buttons: " + opponentScore);
-		System.out.println("GP buttons: " + gpScore);
+//		System.out.println("Opponent buttons: " + opponentScore);
+//		System.out.println("GP buttons: " + gpScore);
 		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
 		gpScore -= 2 * (gpPlayer.getPlayerBoard().countEmptyCells());
-        System.out.println("Opponent empty cells: " + opponent.getPlayerBoard().countEmptyCells());
-        System.out.println("GP empty cells: " + gpPlayer.getPlayerBoard().countEmptyCells());
-		System.out.println("Opponent score: " + opponentScore);
-		System.out.println("GP score: " + gpScore);
+//        System.out.println("Opponent empty cells: " + opponent.getPlayerBoard().countEmptyCells());
+//        System.out.println("GP empty cells: " + gpPlayer.getPlayerBoard().countEmptyCells());
+//		System.out.println("Opponent score: " + opponentScore);
+//		System.out.println("GP score: " + gpScore);
 		Results res = new Results();
 		res.ourPlayerScore = gpScore;
 		res.opponentScore = opponentScore;

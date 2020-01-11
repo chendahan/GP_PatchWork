@@ -15,6 +15,16 @@ import io.jenetics.prog.op.Var;
 import io.jenetics.util.RandomRegistry;
 import io.jenetics.engine.Codec;
 import io.jenetics.ext.util.Tree;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 
 import java.lang.reflect.InvocationTargetException;
@@ -38,12 +48,64 @@ public class PatchWork extends JFrame {
 	public static final int INIT_DEPTH    = 3;
 	public static final int NUM_ROWS = 6;
 	public static final int NUM_COLS = 7;
-	public static final int NUM_GAMES = 100;
+	public static final int NUM_GAMES = 5;
 
 	private static Vector<Double> best_fitness = new Vector<Double>();
 	private static Vector<Double> worst_fitness = new Vector<Double>();
 	private static Vector<Double> average_fitness = new Vector<Double>();
 	private static Vector<Double> median_fitness = new Vector<Double>();
+
+	private static JFreeChart chart;
+	private static ChartPanel panel;
+
+
+	public PatchWork() {
+		super("Line Chart");
+
+		// Create dataset for permutation
+		XYDataset dataset = createDataset();
+		// Create chart
+		chart = ChartFactory.createXYLineChart(
+				"Fitness as Function of Generation", // Chart title
+				"Generation", // X-Axis Label
+				"Fitness", // Y-Axis Label
+				dataset, PlotOrientation.VERTICAL, true,false,false
+		);
+		NumberAxis xAxis = new NumberAxis();
+		xAxis.setTickUnit(new NumberTickUnit(10));
+		final XYPlot plot = (XYPlot)chart.getPlot();
+		plot.getRendererForDataset(plot.getDataset(0)).setSeriesPaint(0, Color.orange);
+		plot.setDomainAxis(xAxis);
+		Font font = new Font("Dialog", Font.PLAIN, 10);
+		plot.getDomainAxis().setTickLabelFont(font);
+		plot.getDomainAxis().setLabelFont(font);
+		plot.getRangeAxis().setLabelFont(font);
+		plot.getRangeAxis().setTickLabelFont(font);
+
+		panel = new ChartPanel(chart);
+		setContentPane(panel);
+	}
+
+	static private XYDataset createDataset() {
+		final XYSeries series1 = new XYSeries("Best Fitness");
+		final XYSeries series2 = new XYSeries("Worst Fitness");
+		final XYSeries series3 = new XYSeries("Average Fitness");
+		final XYSeries series4 = new XYSeries("Median Fitness");
+		for (int i = 0; i < best_fitness.size(); ++i)
+			series1.add(i, best_fitness.get(i));
+		for (int i = 0; i < worst_fitness.size(); ++i)
+			series2.add(i, worst_fitness.get(i));
+		for (int i = 0; i < average_fitness.size(); ++i)
+			series3.add(i, average_fitness.get(i));
+		for (int i = 0; i < median_fitness.size(); ++i)
+			series4.add(i, median_fitness.get(i));
+		final XYSeriesCollection dataset = new XYSeriesCollection( );
+		dataset.addSeries(series1);
+		dataset.addSeries(series2);
+		dataset.addSeries(series3);
+		dataset.addSeries(series4);
+		return dataset;
+	}
 
 	static final ISeq<Op<Double>> OPERATIONS = ISeq.of(
 			MathOp.ADD,
@@ -175,14 +237,14 @@ public class PatchWork extends JFrame {
 		System.out.println("Solution fitness: " + eval(result.getGene()));
 //		System.out.println("Num of evals: " + count);
 
-//		SwingUtilities.invokeAndWait(() -> {
-//			Connect4Player example_p = new Connect4Player();
-//			example_p.setAlwaysOnTop(true);
-//			example_p.pack();
-//			example_p.setSize(600, 400);
-//			example_p.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-//			example_p.setVisible(true);
-//		});
+		SwingUtilities.invokeAndWait(() -> {
+			PatchWork example_p = new PatchWork();
+			example_p.setAlwaysOnTop(true);
+			example_p.pack();
+			example_p.setSize(600, 400);
+			example_p.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+			example_p.setVisible(true);
+		});
 
 
 

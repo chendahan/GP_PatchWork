@@ -8,105 +8,160 @@ import java.util.List;
 import java.util.Map;
 
 public class GameManager {
-	private static int boardSize=50;
-	private static int playerBoardSize=9;
-	private List<Integer> buttonPositions;
-	private List<Integer> specialPiecePositions;
-	private List<Piece> piecesInCircle;
-	private int pieceIndex; // use index%32 in get
-	private Player opponent, ourPlayer;
-	private int currentPlayer;
+    private static int boardSize = 50;
+    private static int playerBoardSize = 9;
+    private List<Integer> buttonPositions;
+    private List<Integer> specialPiecePositions;
+    private List<Piece> piecesInCircle;
+    private int pieceIndex; // use index%32 in get
+    private Player opponent, ourPlayer;
+    private int currentPlayer;
 
-	public GameManager(List<Piece> pieces) {
-		Collections.shuffle(pieces);
-		this.piecesInCircle = pieces;
-		buttonPositions=new ArrayList<>(Arrays.asList(5,10,15,20,24,31,36,42,47));
-		specialPiecePositions=new ArrayList<>(Arrays.asList(10,15,22,30,38));
-		opponent=new Player(1);
-		ourPlayer=new Player(2);
-		//currentPlayer=1;
-		pieceIndex=findStartedPiece();//
-	}
-	
-	public int findStartedPiece() {
-		int index = 0;
-		for(Piece piece : piecesInCircle) {
-			if(piece.getId() == 0)
-				return index;
-		}
-		return -1;
-	}
-	
-	public List<Piece> getNextPiecesAvailableToSelect(){
-		//System.out.println("pieceIndex: " + index);
-		List<Piece> NextAvailablePieces = new ArrayList<>();
-		int min= Math.min(3,piecesInCircle.size() );
-		for(int i=0;i<min;i++)
-		{
-			NextAvailablePieces.add(this.piecesInCircle.get((this.pieceIndex+i)%this.piecesInCircle.size()));
-		}
-		return NextAvailablePieces;
-	}
-	
-	//0/1/2
-	public void updateUsedPiece(int indxUsed)
-	{
-		this.piecesInCircle.remove(indxUsed);
-		if(this.piecesInCircle.size()==0)
-			pieceIndex=0;
-		else
-			pieceIndex=indxUsed%this.piecesInCircle.size();
-	}
-	
-	public Player getNextPlayer() {
-		 return opponent.getPosition() < ourPlayer.getPosition() ?
-				 opponent : ourPlayer;
-	}
-	
-	public boolean canSelectPiece(Piece piece, Player player) {
-	    return piece.getCost() > player.getButtons() ? false : true;
-	}
+    public GameManager(List<Piece> pieces) {
+        Collections.shuffle(pieces);
+        this.piecesInCircle = pieces;
+        buttonPositions = new ArrayList<>(Arrays.asList(5, 10, 15, 20, 24, 31, 36, 42, 47));
+        specialPiecePositions = new ArrayList<>(Arrays.asList(10, 15, 22, 30, 38));
+        opponent = new Player(1);
+        ourPlayer = new Player(2);
+        //currentPlayer=1;
+        pieceIndex = findStartedPiece();//
+    }
 
-	// set parameter is used to differentiate simulation from actual game move
-	public int countNewButtons(int newPosition, Player player, boolean set) {
-		int nextButtonIndex = player.getLastButtonIndex() + 1;
-		// Skip if passed all buttons already
-		if (nextButtonIndex < 9 && newPosition >= buttonPositions.get(nextButtonIndex)) {
-			// collect buttons
-			if (set)
-				player.setLastButtonIndex(nextButtonIndex);
-			return player.getButtons() + player.getPlayerBoard().getButtons();
-		}
-		return player.getButtons();
-	}
+    public int findStartedPiece() {
+        int index = 0;
+        for (Piece piece : piecesInCircle) {
+            if (piece.getId() == 0)
+                return index;
+        }
+        return -1;
+    }
 
-	public int countEmptyCorners(PlayerBoard board) 
-	{
-		int count=0;
-		count += board.getCell(this.playerBoardSize-1,0) ? 0: 1;
-		count += board.getCell(0,this.playerBoardSize-1) ? 0: 1;
-		count += board.getCell(0,0) ? 0: 1;
-		count += board.getCell(this.playerBoardSize-1,this.playerBoardSize-1) ? 0: 1;
-		
-		return count;
-	}
+    public List<Piece> getNextPiecesAvailableToSelect() {
+        //System.out.println("pieceIndex: " + index);
+        List<Piece> NextAvailablePieces = new ArrayList<>();
+        int min = Math.min(3, piecesInCircle.size());
+        for (int i = 0; i < min; i++) {
+            NextAvailablePieces.add(this.piecesInCircle.get((this.pieceIndex + i) % this.piecesInCircle.size()));
+        }
+        return NextAvailablePieces;
+    }
+
+    //0/1/2
+    public void updateUsedPiece(int indxUsed) {
+        this.piecesInCircle.remove(indxUsed);
+        if (this.piecesInCircle.size() == 0)
+            pieceIndex = 0;
+        else
+            pieceIndex = indxUsed % this.piecesInCircle.size();
+    }
+
+    public Player getNextPlayer() {
+        return opponent.getPosition() < ourPlayer.getPosition() ?
+                opponent : ourPlayer;
+    }
+
+    public boolean canSelectPiece(Piece piece, Player player) {
+        return piece.getCost() > player.getButtons() ? false : true;
+    }
+
+    // set parameter is used to differentiate simulation from actual game move
+    public int countNewButtons(int newPosition, Player player, boolean set) {
+        int nextButtonIndex = player.getLastButtonIndex() + 1;
+        // Skip if passed all buttons already
+        if (nextButtonIndex < 9 && newPosition >= buttonPositions.get(nextButtonIndex)) {
+            // collect buttons
+            if (set)
+                player.setLastButtonIndex(nextButtonIndex);
+            return player.getButtons() + player.getPlayerBoard().getButtons();
+        }
+        return player.getButtons();
+    }
+
+    public int countEmptyCorners(PlayerBoard board) {
+        int count = 0;
+        count += board.getCell(this.playerBoardSize - 1, 0) ? 0 : 1;
+        count += board.getCell(0, this.playerBoardSize - 1) ? 0 : 1;
+        count += board.getCell(0, 0) ? 0 : 1;
+        count += board.getCell(this.playerBoardSize - 1, this.playerBoardSize - 1) ? 0 : 1;
+
+        return count;
+    }
 
 
-	public int countCoveredFrame(PlayerBoard board) 
-	{
-		int count=0;
-		for (int i=0;i<this.playerBoardSize; i++)
-		{
-			count += board.getCell(i,0) ? 1: 0;
-			count += board.getCell(0,i) ? 1: 0;
-			count += board.getCell(i,this.playerBoardSize-1) ? 1: 0;
-			count += board.getCell(this.playerBoardSize-1,i) ? 1: 0;
-		}
-		
-		return count;
-	}
-	
-	public int countFreeCells(PlayerBoard board) 
+    public int countCoveredFrame(PlayerBoard board) {
+        int count = 0;
+        for (int i = 0; i < this.playerBoardSize; i++) {
+            count += board.getCell(i, 0) ? 1 : 0;
+            count += board.getCell(0, i) ? 1 : 0;
+            count += board.getCell(i, this.playerBoardSize - 1) ? 1 : 0;
+            count += board.getCell(this.playerBoardSize - 1, i) ? 1 : 0;
+        }
+
+        return count;
+    }
+
+    // counts how many cells are empty with full cells around them
+    public int countEnclosedCells(PlayerBoard board) {
+        int count = 0;
+        for (int i=0;i< playerBoardSize; i++) {
+            for (int j = 0; j < playerBoardSize; j++) {
+                if (i==0 && j==0) {
+                    if (board.getCell(0, 1) == true && board.getCell(1, 0) == true)
+                        count++;
+                }
+                else if (i==playerBoardSize-1 && j==0) {
+                    if (board.getCell(playerBoardSize-1, 1) == true && board.getCell(playerBoardSize-2, 0) == true)
+                        count++;
+                }
+                else if (i==playerBoardSize-1 && j==playerBoardSize-1) {
+                    if (board.getCell(playerBoardSize-1, playerBoardSize-2) == true &&
+                            board.getCell(playerBoardSize-2, playerBoardSize-1) == true)
+                        count++;
+                }
+                else if (i==0 && j==playerBoardSize-1) {
+                    if (board.getCell(1, playerBoardSize-1) == true &&
+                            board.getCell(0, playerBoardSize-2) == true)
+                        count++;
+                }
+                else if (i==0)
+                {
+                    if (board.getCell(0, j-1) == true && board.getCell(0, j+1) == true &&
+                            board.getCell(1, j) == true)
+                        count++;
+                }
+                else if (i==playerBoardSize-1)
+                {
+                    if (board.getCell(playerBoardSize-1, j-1) == true &&
+                            board.getCell(playerBoardSize-1, j+1) == true &&
+                            board.getCell(playerBoardSize-2, j) == true)
+                        count++;
+                }
+                else if (j==0)
+                {
+                    if (board.getCell(i-1, 0) == true && board.getCell(i+1, 0) == true &&
+                            board.getCell(i, 1) == true)
+                        count++;
+                }
+                else if (j==playerBoardSize-1)
+                {
+                    if (board.getCell(i-1, playerBoardSize-1) == true &&
+                            board.getCell(i+1,playerBoardSize-1) == true &&
+                            board.getCell(i, playerBoardSize-2) == true)
+                        count++;
+                }
+                else // inner cell
+                {
+                    if (board.getCell(i, j-1) == true && board.getCell(i, j+1) == true &&
+                            board.getCell(i-1, j) == true && board.getCell(i+1, j) == true)
+                        count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public int countFreeCells(PlayerBoard board)
 	{
 		int count=0;
 		for (int i=0;i<this.playerBoardSize; i++)
@@ -203,7 +258,7 @@ public class GameManager {
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
 		boolean firstOption = false;
-		Double[] terminals = new Double[7];
+		Double[] terminals = new Double[8];
 		// First option: place a piece
 		for (Piece piece : pieces) {
 			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
@@ -226,6 +281,7 @@ public class GameManager {
 							terminals[4]= (double)(pieceShape.size());
 							terminals[5]= (double)(countFreeCells(copy));
 							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot));
+                            terminals[7] = (double)(countEnclosedCells(copy));
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -254,6 +310,7 @@ public class GameManager {
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 
 			terminals[5]= (double)(countFreeCells(board));
 			terminals[6]= (double)0;//no piece surroundings
+            terminals[7] = (double)(countEnclosedCells(board));
 			double res = program.apply(terminals);
 			if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
 				firstOption = false;
@@ -281,7 +338,7 @@ public class GameManager {
 		{
 			dot.setColumn(dot.getColumn()+coord.getColumn());
 			dot.setRow(dot.getRow()+1 +coord.getRow());
-			if ((dot.getRow()<this.boardSize) && !pieceShape.contains(dot))
+			if ((dot.getRow()<this.playerBoardSize) && !pieceShape.contains(dot))
 			{
 				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
 			}
@@ -301,7 +358,7 @@ public class GameManager {
 		for(Dot dot:pieceShapCopy)
 		{
 			dot.setColumn(dot.getColumn()+1);
-			if ((dot.getColumn()<this.boardSize) && !pieceShape.contains(dot))
+			if ((dot.getColumn()<this.playerBoardSize) && !pieceShape.contains(dot))
 			{
 				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
 			}

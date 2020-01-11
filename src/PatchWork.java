@@ -40,11 +40,11 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class PatchWork extends JFrame {
-	public static final int POPULATION_SIZE    = 300;
+	public static final int POPULATION_SIZE    = 200;
 	public static final double MUTATION_PROB   = 0.05;
 	public static final double CROSSOVER_PROB  = 0.7;
 	public static final int MAX_GENERATIONS    = 100;
-	public static final int MAX_DEPTH    = 20;
+	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 5;
 	public static final int NUM_ROWS = 6;
 	public static final int NUM_COLS = 7;
@@ -122,7 +122,8 @@ public class PatchWork extends JFrame {
 			Var.of("d", 3),
 			Var.of("e", 4),
 			Var.of("f", 5),
-			Var.of("g", 6)
+			Var.of("g", 6),
+			Var.of("h", 7)
 	);
 
 
@@ -144,7 +145,7 @@ public class PatchWork extends JFrame {
 		}
 		ourPlayerAvg = ourPlayerAvg / NUM_GAMES;
 		opponentAvg = opponentAvg / NUM_GAMES;
-		return ourPlayerAvg - opponentAvg; // TODO: construct more complex fitness function
+		return ourPlayerAvg * 0.7 - (0.3 * opponentAvg); // want to maximize our score and minimize opponent score
 	}
 
 	static final Codec<ProgramGene<Double>, ProgramGene<Double>> CODEC =

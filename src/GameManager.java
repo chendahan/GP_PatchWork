@@ -67,12 +67,14 @@ public class GameManager {
 	    return piece.getCost() > player.getButtons() ? false : true;
 	}
 
-	public int countNewButtons(int newPosition, Player player) {
+	// set parameter is used to differentiate simulation from actual game move
+	public int countNewButtons(int newPosition, Player player, boolean set) {
 		int nextButtonIndex = player.getLastButtonIndex() + 1;
 		// Skip if passed all buttons already
 		if (nextButtonIndex < 9 && newPosition >= buttonPositions.get(nextButtonIndex)) {
 			// collect buttons
-			player.setLastButtonIndex(nextButtonIndex);
+			if (set)
+				player.setLastButtonIndex(nextButtonIndex);
 			return player.getButtons() + player.getPlayerBoard().getButtons();
 		}
 		return player.getButtons();
@@ -126,7 +128,7 @@ public class GameManager {
 		List<Dot> pieceShape = pieceAndCoord.shape;
 		player.getPlayerBoard().placePiece(piece, pieceShape, position);
 		int newPosition = player.getPosition()+piece.getTime();
-		player.setButtons(countNewButtons(newPosition, player)-piece.getCost());
+		player.setButtons(countNewButtons(newPosition, player, true)-piece.getCost());
 		player.setPosition(newPosition);
 		updateUsedPiece(pieceAndCoord.index);
 		//return true;
@@ -136,7 +138,7 @@ public class GameManager {
 		int prev_pos = player.getPosition();
 		player.setPosition(position);
 		int numStepsToMove = position - prev_pos;
-		int newButtons = numStepsToMove + countNewButtons(position, player);
+		int newButtons = numStepsToMove + countNewButtons(position, player, true);
 		player.setButtons(newButtons);
 	}
 
@@ -217,7 +219,7 @@ public class GameManager {
 							copy.placePiece(piece, pieceShape, dot); // simulate placement
 							int new_pos = ourPlayer.getPosition() + piece.getTime();
 							terminals[0] = (double)(new_pos); // new position
-							terminals[1] = (double)(countNewButtons(new_pos, ourPlayer) -
+							terminals[1] = (double)(countNewButtons(new_pos, ourPlayer, false) -
 											piece.getCost()); // new amount of buttons
 							terminals[2]= (double)(countEmptyCorners(copy));
 							terminals[3]= (double)(countCoveredFrame(copy));
@@ -246,7 +248,7 @@ public class GameManager {
 		if (numStepsToMove > 0) { // SHOULD ALWAYS BE TRUE - it's always the turn of the player who is behind
 			terminals[0] = (double) (opponent.getPosition() + 1); // new position
 			terminals[1] = (double) (numStepsToMove +
-					countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons
+					countNewButtons(opponent.getPosition() + 1, ourPlayer, false));// new amount of buttons
 			terminals[2]= (double)(countEmptyCorners(board));
 			terminals[3]= (double)(countCoveredFrame(board));
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 

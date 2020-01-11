@@ -59,7 +59,8 @@ public class PatchWork extends JFrame {
 			Var.of("c", 2),
 			Var.of("d", 3),
 			Var.of("e", 4),
-			Var.of("f", 5)
+			Var.of("f", 5),
+			Var.of("g", 6)
 	);
 
 

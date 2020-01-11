@@ -201,7 +201,7 @@ public class GameManager {
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
 		boolean firstOption = false;
-		Double[] terminals = new Double[6];
+		Double[] terminals = new Double[7];
 		// First option: place a piece
 		for (Piece piece : pieces) {
 			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
@@ -223,6 +223,7 @@ public class GameManager {
 							terminals[3]= (double)(countCoveredFrame(copy));
 							terminals[4]= (double)(pieceShape.size());
 							terminals[5]= (double)(countFreeCells(copy));
+							terminals[6]= (double)(countEmptySurrounding(board,pieceShape));
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -250,6 +251,7 @@ public class GameManager {
 			terminals[3]= (double)(countCoveredFrame(board));
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 
 			terminals[5]= (double)(countFreeCells(board));
+			terminals[6]= (double)0;//no piece surroundings
 			double res = program.apply(terminals);
 			if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
 				firstOption = false;
@@ -260,10 +262,65 @@ public class GameManager {
 			System.out.println("check chosenPiece ");
 		}
 		if (firstOption)
+		{
+			if (!board.isLegalPlacement(chosenPiece.shape, chosenPiece.coord))
+			{
+				System.out.println("check chosenPiece ");
+			}
 			placePiece(ourPlayer, chosenPiece);
+		}
 		else
 			moveNoPiece(ourPlayer, opponent.getPosition() + 1);
 
+	}
+
+	private double countEmptySurrounding(PlayerBoard board, List<Dot> pieceShape)
+	{
+		int count=0;
+		List<Dot> pieceShapCopy=new ArrayList<Dot>();
+		for(Dot dot:pieceShape)
+			pieceShapCopy.add(new Dot(dot.getRow(),dot.getColumn()));
+			
+		//check up- x+1 for all dots
+		for(Dot dot:pieceShapCopy)
+		{
+			dot.setRow(dot.getRow()+1);
+			if ((dot.getRow()<this.boardSize) && !pieceShape.contains(dot))
+			{
+				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+			}
+		}		
+		//check down- x-1 for all dots
+		for(Dot dot:pieceShapCopy)
+		{
+			dot.setRow(dot.getRow()-2);
+			if ((dot.getRow()>0) &&!pieceShape.contains(dot))
+			{
+				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+			}
+			dot.setRow(dot.getRow()+1);
+		}
+		
+		//check right- y+1 for all dots
+		for(Dot dot:pieceShapCopy)
+		{
+			dot.setColumn(dot.getColumn()+1);
+			if ((dot.getColumn()<this.boardSize) && !pieceShape.contains(dot))
+			{
+				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+			}
+		}
+		//check left- y-1 for all dots
+		for(Dot dot:pieceShapCopy)
+		{
+			dot.setColumn(dot.getColumn()-2);
+			if ((dot.getColumn()>0) && !pieceShape.contains(dot))
+			{
+				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+			}
+		}
+		
+		return count;
 	}
 
 	public Results getResults(Player opponent, Player gpPlayer)

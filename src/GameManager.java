@@ -51,11 +51,11 @@ public class GameManager {
 	//0/1/2
 	public void updateUsedPiece(int indxUsed)
 	{
-		this.piecesInCircle.remove((indxUsed+this.pieceIndex)%this.piecesInCircle.size());
+		this.piecesInCircle.remove(indxUsed);
 		if(this.piecesInCircle.size()==0)
 			pieceIndex=0;
 		else
-			pieceIndex=(indxUsed+pieceIndex)%this.piecesInCircle.size();
+			pieceIndex=indxUsed%this.piecesInCircle.size();
 	}
 	
 	public Player getNextPlayer() {
@@ -126,7 +126,7 @@ public class GameManager {
 		List<Dot> pieceShape = pieceAndCoord.shape;
 		player.getPlayerBoard().placePiece(piece, pieceShape, position);
 		int newPosition = player.getPosition()+piece.getTime();
-		player.setButtons(countNewButtons(newPosition, player)-piece.getButtons());
+		player.setButtons(countNewButtons(newPosition, player)-piece.getCost());
 		player.setPosition(newPosition);
 		updateUsedPiece(pieceAndCoord.index);
 		//return true;
@@ -178,7 +178,7 @@ public class GameManager {
 						}
 					}
 				}
-				index++;
+				index = (index+1)%this.piecesInCircle.size();
 			}
 			if (availablePieces.size() != 0) {
 				int chosenAtIndex = (int) (Math.random() * availablePieces.size());
@@ -238,11 +238,11 @@ public class GameManager {
 					}
 				}
 			}
-			index++;
+			index = (index+1)%this.piecesInCircle.size();
 		}
 		// Second option: just advance the player to get buttons
 		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
-		if (numStepsToMove > 0) { // can use this option only if player is behind the opponent
+		if (numStepsToMove > 0) { // SHOULD ALWAYS BE TRUE - it's always the turn of the player who is behind
 			terminals[0] = (double) (opponent.getPosition() + 1); // new position
 			terminals[1] = (double) (numStepsToMove +
 					countNewButtons(opponent.getPosition() + 1, ourPlayer));// new amount of buttons

@@ -244,7 +244,7 @@ public class GameManager {
 			index = (index+1)%this.piecesInCircle.size();
 		}
 		// Second option: just advance the player to get buttons
-		int numStepsToMove = ourPlayer.getPosition() - opponent.getPosition() + 1;
+		int numStepsToMove = opponent.getPosition() - ourPlayer.getPosition() + 1;
 		if (numStepsToMove > 0) { // SHOULD ALWAYS BE TRUE - it's always the turn of the player who is behind
 			terminals[0] = (double) (opponent.getPosition() + 1); // new position
 			terminals[1] = (double) (numStepsToMove +
@@ -335,6 +335,8 @@ public class GameManager {
 		System.out.println("GP buttons: " + gpScore);
 		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
 		gpScore -= 2 * (gpPlayer.getPlayerBoard().countEmptyCells());
+        System.out.println("Opponent empty cells: " + opponent.getPlayerBoard().countEmptyCells());
+        System.out.println("GP empty cells: " + gpPlayer.getPlayerBoard().countEmptyCells());
 		System.out.println("Opponent score: " + opponentScore);
 		System.out.println("GP score: " + gpScore);
 		Results res = new Results();

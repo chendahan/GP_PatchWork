@@ -40,12 +40,12 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class PatchWork extends JFrame {
-	public static final int POPULATION_SIZE    = 200;
-	public static final double MUTATION_PROB   = 0.1;
+	public static final int POPULATION_SIZE    = 300;
+	public static final double MUTATION_PROB   = 0.05;
 	public static final double CROSSOVER_PROB  = 0.7;
 	public static final int MAX_GENERATIONS    = 100;
-	public static final int MAX_DEPTH    = 15;
-	public static final int INIT_DEPTH    = 3;
+	public static final int MAX_DEPTH    = 20;
+	public static final int INIT_DEPTH    = 5;
 	public static final int NUM_ROWS = 6;
 	public static final int NUM_COLS = 7;
 	public static final int NUM_GAMES = 5;
@@ -127,8 +127,8 @@ public class PatchWork extends JFrame {
 
 
 	private static double eval(final ProgramGene<Double> program) {
-		//    int result = 0; // 0 - game not ended, 1 - our player won, 2 - random player won, 3 - tie
-		int num_won = 0;
+		int ourPlayerAvg = 0;
+		int opponentAvg = 0;
 		int num_lost = 0;
 		int sum_moves_till_win = 0;
 		int sum_moves_till_lose = 0;
@@ -139,8 +139,12 @@ public class PatchWork extends JFrame {
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
 			res = game.playGame(program);
+			ourPlayerAvg += res.ourPlayerScore;
+			opponentAvg += res.opponentScore;
 		}
-		return res.ourPlayerScore; // TODO: construct more complex fitness function
+		ourPlayerAvg = ourPlayerAvg / NUM_GAMES;
+		opponentAvg = opponentAvg / NUM_GAMES;
+		return ourPlayerAvg - opponentAvg; // TODO: construct more complex fitness function
 	}
 
 	static final Codec<ProgramGene<Double>, ProgramGene<Double>> CODEC =
@@ -203,14 +207,14 @@ public class PatchWork extends JFrame {
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)
 				.offspringSelector(new TournamentSelector<>())
-				.survivorsSelector //(new TournamentSelector<>())
-				(new EliteSelector<ProgramGene<Double>, Double>(
-						// Number of best individuals preserved for next generation: elites
-						POPULATION_SIZE/100,
-						// Selector used for selecting rest of population.
-						new TournamentSelector<>()))
+				.survivorsSelector (new TournamentSelector<>())
+//				(new EliteSelector<ProgramGene<Double>, Double>(
+//						// Number of best individuals preserved for next generation: elites
+//						POPULATION_SIZE/100,
+//						// Selector used for selecting rest of population.
+//						new TournamentSelector<>()))
 				.alterers(
-						// new Mutator<>(MUTATION_PROB),
+						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))
 				.build();
 

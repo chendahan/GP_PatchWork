@@ -200,7 +200,7 @@ public class GameManager {
 		double max_res = -100000;
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
-		boolean firstOption = true;
+		boolean firstOption = false;
 		Double[] terminals = new Double[6];
 		// First option: place a piece
 		for (Piece piece : pieces) {
@@ -228,9 +228,11 @@ public class GameManager {
 								init_max_res = true;
 								max_res = res;
 								chosenPiece = new PieceAndCoord(piece, dot, pieceShape, index);
+								firstOption = true;
 							} else if (res > max_res) {
 								max_res = res;
 								chosenPiece = new PieceAndCoord(piece, dot, pieceShape, index);
+								firstOption = true;
 							}
 						}
 					}

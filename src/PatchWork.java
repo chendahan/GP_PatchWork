@@ -55,7 +55,11 @@ public class PatchWork extends JFrame {
 			EphemeralConst.of(() ->
 					(double)RandomRegistry.getRandom().nextInt(10)),
 			Var.of("a", 0),
-			Var.of("b", 1)
+			Var.of("b", 1),
+			Var.of("c", 2),
+			Var.of("d", 3),
+			Var.of("e", 4),
+			Var.of("f", 5)
 	);
 
 

@@ -225,7 +225,7 @@ public class GameManager {
 							terminals[3]= (double)(countCoveredFrame(copy));
 							terminals[4]= (double)(pieceShape.size());
 							terminals[5]= (double)(countFreeCells(copy));
-							terminals[6]= (double)(countEmptySurrounding(board,pieceShape));
+							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot));
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -269,7 +269,7 @@ public class GameManager {
 
 	}
 
-	private double countEmptySurrounding(PlayerBoard board, List<Dot> pieceShape)
+	private double countEmptySurrounding(PlayerBoard board, List<Dot> pieceShape,Dot coord)
 	{
 		int count=0;
 		List<Dot> pieceShapCopy=new ArrayList<Dot>();
@@ -279,7 +279,8 @@ public class GameManager {
 		//check up- x+1 for all dots
 		for(Dot dot:pieceShapCopy)
 		{
-			dot.setRow(dot.getRow()+1);
+			dot.setColumn(dot.getColumn()+coord.getColumn());
+			dot.setRow(dot.getRow()+1 +coord.getRow());
 			if ((dot.getRow()<this.boardSize) && !pieceShape.contains(dot))
 			{
 				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;

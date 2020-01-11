@@ -257,16 +257,9 @@ public class GameManager {
 				firstOption = false;
 			}
 		}
-		if(this.piecesInCircle.size()==1)
-		{
-			System.out.println("check chosenPiece ");
-		}
+
 		if (firstOption)
 		{
-			if (!board.isLegalPlacement(chosenPiece.shape, chosenPiece.coord))
-			{
-				System.out.println("check chosenPiece ");
-			}
 			placePiece(ourPlayer, chosenPiece);
 		}
 		else

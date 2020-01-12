@@ -130,10 +130,15 @@ public class PatchWork extends JFrame {
 
 	private static double eval(final ProgramGene<Double> program) {
 		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
+		ProgramGene<Double> opponent = program; // initialization here is just for compilation (won't be used)
+		boolean random = false;
 		if (pop == null)
-			return 0;
-		int idx = (int) (Math.random() * pop.length());
-		ProgramGene<Double> opponent = pop.get(idx).getGene();
+			random = true;
+		else
+		{
+			int idx = (int) (Math.random() * pop.length());
+			opponent = pop.get(idx).getGene();
+		}
 		Results res;
 		double winScore = 0; // 1 point for tie, 2 points for win
 		double ourPlayerAvgButtons = 0;
@@ -142,7 +147,10 @@ public class PatchWork extends JFrame {
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
-			res = game.playGame(program, opponent);
+			if (random)
+				res = game.playGame(program);
+			else
+				res = game.playGame(program, opponent);
 			winScore += res.winScore;
 			ourPlayerAvgButtons += res.ourPlayerButtons;
 			ourPlayerAvgFilled += res.ourPlayerFilledCells;

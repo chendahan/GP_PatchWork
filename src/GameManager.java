@@ -281,7 +281,7 @@ public class GameManager {
 							terminals[4]= (double)(pieceShape.size());
 							terminals[5]= (double)(countFreeCells(copy));
 							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot));
-                            terminals[7] = (double)(countEnclosedCells(copy));
+							terminals[7] = (double)(countEnclosedCells(copy));
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -387,23 +387,34 @@ public class GameManager {
 		{
 			gpScore += 7;
 		}
-		opponentScore += opponent.getButtons();
-		gpScore += gpPlayer.getButtons();
-//		System.out.println("Opponent buttons: " + opponentScore);
-//		System.out.println("GP buttons: " + gpScore);
-		opponentScore -= 2 * (opponent.getPlayerBoard().countEmptyCells());
-		gpScore -= 2 * (gpPlayer.getPlayerBoard().countEmptyCells());
-//        System.out.println("Opponent empty cells: " + opponent.getPlayerBoard().countEmptyCells());
-//        System.out.println("GP empty cells: " + gpPlayer.getPlayerBoard().countEmptyCells());
+
+		int opponentButtons = opponent.getButtons();
+		int gpButtons = gpPlayer.getButtons();
+		int opponentEmptyCells = opponent.getPlayerBoard().countEmptyCells();
+		int gpEmptyCells = gpPlayer.getPlayerBoard().countEmptyCells();
+		gpScore = gpButtons - 2 * gpEmptyCells;
+		opponentScore = opponentButtons - 2 * opponentEmptyCells;
+//		System.out.println("Opponent buttons: " + opponentButtons);
+//		System.out.println("GP buttons: " + gpButtons);
+//        System.out.println("Opponent empty cells: " + opponentEmptyCells);
+//        System.out.println("GP empty cells: " + gpEmptyCells);
 //		System.out.println("Opponent score: " + opponentScore);
 //		System.out.println("GP score: " + gpScore);
 		Results res = new Results();
-		res.ourPlayerScore = gpScore;
-		res.opponentScore = opponentScore;
+		if (gpScore > opponentScore)
+			res.winScore = 2;
+		else if (gpScore == opponentScore)
+			res.winScore = 1;
+		else
+			res.winScore = 0;
+		res.opponentButtons = opponentButtons;
+		res.ourPlayerButtons = gpButtons;
+		res.opponentFilledCells = playerBoardSize*playerBoardSize - opponentEmptyCells;
+		res.ourPlayerFilledCells = playerBoardSize*playerBoardSize - gpEmptyCells;
 		return res;
 	}
 
-	// TODO: add more statistics about the game to "Results" class
+
 	public Results playGame(final ProgramGene<Double> program)
 	{
 		int first = (int) (Math.random() * 2);

@@ -1,4 +1,7 @@
 public class Results {
-    int ourPlayerScore = 0;
-    int opponentScore = 0;
+    int winScore; // 0 for opponent, 1 for tie, 2 for our player
+    int opponentButtons = 0;
+    int ourPlayerButtons = 0;
+    int opponentFilledCells = 0;
+    int ourPlayerFilledCells = 0;
 }

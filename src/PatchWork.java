@@ -40,7 +40,7 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class PatchWork extends JFrame {
-	public static final int POPULATION_SIZE    = 200;
+	public static final int POPULATION_SIZE    = 400;
 	public static final double MUTATION_PROB   = 0.05;
 	public static final double CROSSOVER_PROB  = 0.7;
 	public static final int MAX_GENERATIONS    = 100;
@@ -128,24 +128,22 @@ public class PatchWork extends JFrame {
 
 
 	private static double eval(final ProgramGene<Double> program) {
-		int ourPlayerAvg = 0;
-		int opponentAvg = 0;
-		int num_lost = 0;
-		int sum_moves_till_win = 0;
-		int sum_moves_till_lose = 0;
-		int sum_max_adj = 0;
-		Results res = new Results();
+		Results res;
+		double winScore = 0; // 1 point for tie, 2 points for win
+		double ourPlayerAvgButtons = 0;
+		double ourPlayerAvgFilled = 0;
 		for (int j=0; j < NUM_GAMES; j++) {
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
 			res = game.playGame(program);
-			ourPlayerAvg += res.ourPlayerScore;
-			opponentAvg += res.opponentScore;
+			winScore += res.winScore;
+			ourPlayerAvgButtons += res.ourPlayerButtons;
+			ourPlayerAvgFilled += res.ourPlayerFilledCells;
 		}
-		ourPlayerAvg = ourPlayerAvg / NUM_GAMES;
-		opponentAvg = opponentAvg / NUM_GAMES;
-		return ourPlayerAvg * 0.7 - (0.3 * opponentAvg); // want to maximize our score and minimize opponent score
+		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
+		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
+		return 0.5 * winScore + 0.25 * ourPlayerAvgButtons + 0.25 * ourPlayerAvgFilled;
 	}
 
 	static final Codec<ProgramGene<Double>, ProgramGene<Double>> CODEC =

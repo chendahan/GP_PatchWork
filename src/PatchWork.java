@@ -1,5 +1,6 @@
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.jenetics.*;
 import io.jenetics.engine.Engine;
@@ -40,15 +41,15 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class PatchWork extends JFrame {
-	public static final int POPULATION_SIZE    = 400;
+	public static final int POPULATION_SIZE    = 500;
 	public static final double MUTATION_PROB   = 0.05;
 	public static final double CROSSOVER_PROB  = 0.7;
 	public static final int MAX_GENERATIONS    = 100;
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 5;
-	public static final int NUM_ROWS = 6;
-	public static final int NUM_COLS = 7;
 	public static final int NUM_GAMES = 5;
+
+	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
 
 	private static Vector<Double> best_fitness = new Vector<Double>();
 	private static Vector<Double> worst_fitness = new Vector<Double>();
@@ -128,6 +129,11 @@ public class PatchWork extends JFrame {
 
 
 	private static double eval(final ProgramGene<Double> program) {
+		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
+		if (pop == null)
+			return 0;
+		int idx = (int) (Math.random() * pop.length());
+		ProgramGene<Double> opponent = pop.get(idx).getGene();
 		Results res;
 		double winScore = 0; // 1 point for tie, 2 points for win
 		double ourPlayerAvgButtons = 0;
@@ -136,13 +142,16 @@ public class PatchWork extends JFrame {
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
-			res = game.playGame(program);
+			res = game.playGame(program, opponent);
 			winScore += res.winScore;
 			ourPlayerAvgButtons += res.ourPlayerButtons;
 			ourPlayerAvgFilled += res.ourPlayerFilledCells;
 		}
+		//System.out.println("winScore: " + winScore);
 		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
 		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
+		// max finess is: 5 + ( max buttons? ) + 20.25
+		//return winScore;
 		return 0.5 * winScore + 0.25 * ourPlayerAvgButtons + 0.25 * ourPlayerAvgFilled;
 	}
 
@@ -181,22 +190,22 @@ public class PatchWork extends JFrame {
 
 	static int gen = 0;
 
-	private static double calculate_permutation_average_fitness(ISeq<Genotype<ProgramGene<Double>>> genotypes){
+	private static double calculate_permutation_average_fitness(ISeq<Phenotype<ProgramGene<Double>, Double>> phenotypes){
 		double sum = 0;
-		for(int i = 0; i < genotypes.length(); i++){
-			double eval =  eval(genotypes.get(i).getGene());
+		for(int i = 0; i < phenotypes.length(); i++){
+			double eval =  phenotypes.get(i).getFitness();
 			//   System.out.println(genotypes.get(i));
 			sum += eval;
 		}
-		System.out.println("generation: " + gen + ", eval avg: " + sum / genotypes.length());
+		System.out.println("generation: " + gen + ", eval avg: " + sum / phenotypes.length());
 		gen++;
-		return sum / genotypes.length();
+		return sum / phenotypes.length();
 	}
 
-	private static double calculate_permutation_median_fitness(ISeq<Genotype<ProgramGene<Double>>> genotypes){
-		double evals[] = new double[genotypes.length()];
-		for(int i = 0; i < genotypes.length(); i++) {
-			evals[i] = eval(genotypes.get(i).getGene());
+	private static double calculate_permutation_median_fitness(ISeq<Phenotype<ProgramGene<Double>, Double>> phenotypes){
+		double evals[] = new double[phenotypes.length()];
+		for(int i = 0; i < phenotypes.length(); i++) {
+			evals[i] = phenotypes.get(i).getFitness();
 		}
 		return median(evals);
 	}
@@ -206,12 +215,12 @@ public class PatchWork extends JFrame {
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)
 				.offspringSelector(new TournamentSelector<>())
-				.survivorsSelector (new TournamentSelector<>())
-//				(new EliteSelector<ProgramGene<Double>, Double>(
-//						// Number of best individuals preserved for next generation: elites
-//						POPULATION_SIZE/100,
-//						// Selector used for selecting rest of population.
-//						new TournamentSelector<>()))
+				.survivorsSelector //(new TournamentSelector<>())
+				(new EliteSelector<ProgramGene<Double>, Double>(
+						// Number of best individuals preserved for next generation: elites
+						POPULATION_SIZE/100,
+						// Selector used for selecting rest of population.
+						new TournamentSelector<>()))
 				.alterers(
 						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))
@@ -223,10 +232,11 @@ public class PatchWork extends JFrame {
 		Genotype<ProgramGene<Double>> result = engine.stream()
 				// Terminate the evolution after maximal 100 generations.
 				.limit(MAX_GENERATIONS)
-				.peek(er -> {best_fitness.add(er.getBestFitness());
+				.peek(er -> {POP.set(er.getGenotypes());
+					best_fitness.add(er.getBestFitness());
 					worst_fitness.add(er.getWorstFitness());
-					average_fitness.add(calculate_permutation_average_fitness(er.getGenotypes()));
-					median_fitness.add(calculate_permutation_median_fitness(er.getGenotypes()));})
+					average_fitness.add(calculate_permutation_average_fitness(er.getPopulation()));
+					median_fitness.add(calculate_permutation_median_fitness(er.getPopulation()));})
 				.collect(EvolutionResult.toBestGenotype());
 		long end = engine.getClock().millis();
 		System.out.println("Total time in milliseconds: " + (end-start));

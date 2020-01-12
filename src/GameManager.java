@@ -249,11 +249,11 @@ public class GameManager {
 
 	}
 
-	public void makeMove(final ProgramGene<Double> program)
+	public void makeMove(final ProgramGene<Double> program, Player player, Player secondPlayer)
 	{
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
 		int index = pieceIndex;
-		PlayerBoard board = ourPlayer.getPlayerBoard();
+		PlayerBoard board = player.getPlayerBoard();
 		double max_res = -100000;
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
@@ -261,7 +261,7 @@ public class GameManager {
 		Double[] terminals = new Double[8];
 		// First option: place a piece
 		for (Piece piece : pieces) {
-			if (!canSelectPiece(piece, ourPlayer)) // skip too expensive pieces
+			if (!canSelectPiece(piece, player)) // skip too expensive pieces
 				continue;
 			for (int i = 0; i < playerBoardSize; i++) {
 				for (int j = 0; j < playerBoardSize; j++) {
@@ -272,9 +272,9 @@ public class GameManager {
 						if (board.isLegalPlacement(pieceShape, dot)) {
 							PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
 							copy.placePiece(piece, pieceShape, dot); // simulate placement
-							int new_pos = ourPlayer.getPosition() + piece.getTime();
+							int new_pos = player.getPosition() + piece.getTime();
 							terminals[0] = (double)(new_pos); // new position
-							terminals[1] = (double)(countNewButtons(new_pos, ourPlayer, false) -
+							terminals[1] = (double)(countNewButtons(new_pos, player, false) -
 											piece.getCost()); // new amount of buttons
 							terminals[2]= (double)(countEmptyCorners(copy));
 							terminals[3]= (double)(countCoveredFrame(copy));
@@ -300,11 +300,11 @@ public class GameManager {
 			index = (index+1)%this.piecesInCircle.size();
 		}
 		// Second option: just advance the player to get buttons
-		int numStepsToMove = opponent.getPosition() - ourPlayer.getPosition() + 1;
+		int numStepsToMove = secondPlayer.getPosition() - player.getPosition() + 1;
 		if (numStepsToMove > 0) { // SHOULD ALWAYS BE TRUE - it's always the turn of the player who is behind
-			terminals[0] = (double) (opponent.getPosition() + 1); // new position
+			terminals[0] = (double) (secondPlayer.getPosition() + 1); // new position
 			terminals[1] = (double) (numStepsToMove +
-					countNewButtons(opponent.getPosition() + 1, ourPlayer, false));// new amount of buttons
+					countNewButtons(secondPlayer.getPosition() + 1, player, false));// new amount of buttons
 			terminals[2]= (double)(countEmptyCorners(board));
 			terminals[3]= (double)(countCoveredFrame(board));
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 
@@ -319,10 +319,10 @@ public class GameManager {
 
 		if (firstOption)
 		{
-			placePiece(ourPlayer, chosenPiece);
+			placePiece(player, chosenPiece);
 		}
 		else
-			moveNoPiece(ourPlayer, opponent.getPosition() + 1);
+			moveNoPiece(player, secondPlayer.getPosition() + 1);
 
 	}
 
@@ -380,13 +380,30 @@ public class GameManager {
 	{
 		int opponentScore = 0;
 		int gpScore = 0;
-		if (opponent.hasSevenBySeven())
-		{
-			opponentScore += 7;
-		} else if (gpPlayer.hasSevenBySeven())
-		{
-			gpScore += 7;
-		}
+//		System.out.println("Opponent:");
+//		for (int x=0;x<playerBoardSize;x++)
+//		{
+//			for (int y=0;y<playerBoardSize;y++)
+//			{
+//				if (opponent.getPlayerBoard().getCell(x ,y))
+//					System.out.print("1");
+//				else
+//					System.out.print("0");
+//			}
+//			System.out.println();
+//		}
+//		System.out.println("GP:");
+//		for (int x=0;x<playerBoardSize;x++)
+//		{
+//			for (int y=0;y<playerBoardSize;y++)
+//			{
+//				if (gpPlayer.getPlayerBoard().getCell(x ,y))
+//					System.out.print("1");
+//				else
+//					System.out.print("0");
+//			}
+//			System.out.println();
+//		}
 
 		int opponentButtons = opponent.getButtons();
 		int gpButtons = gpPlayer.getButtons();
@@ -432,7 +449,31 @@ public class GameManager {
 			} else { // next == player2
 				if (ourPlayer.getPosition() == boardSize-1)
 					continue;
-				makeMove(program);
+				makeMove(program, ourPlayer, opponent);
+			}
+			next = getNextPlayer();
+		}
+		return getResults(opponent, ourPlayer);
+	}
+
+	public Results playGame(final ProgramGene<Double> program, final ProgramGene<Double> programOpponent)
+	{
+		int first = (int) (Math.random() * 2);
+		int i = 0;
+		Player next = ourPlayer;
+		// randomly choose first player
+		if (i % 2 == first)
+			next = opponent; // player1 is random player
+		while(opponent.getPosition() < boardSize-1 || ourPlayer.getPosition() < boardSize-1) {
+			// the player whose turn it is & didn't get to the finish plays
+			if (next == opponent) {
+				if (opponent.getPosition() == boardSize-1)
+					continue;
+				makeMove(programOpponent, opponent, ourPlayer);
+			} else { // next == player2
+				if (ourPlayer.getPosition() == boardSize-1)
+					continue;
+				makeMove(program, ourPlayer, opponent);
 			}
 			next = getNextPlayer();
 		}

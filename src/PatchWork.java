@@ -124,7 +124,10 @@ public class PatchWork extends JFrame {
 			Var.of("e", 4),
 			Var.of("f", 5),
 			Var.of("g", 6),
-			Var.of("h", 7)
+			Var.of("h", 7),
+			Var.of("i", 8),
+			Var.of("j", 9),
+			Var.of("k", 10)
 	);
 
 
@@ -223,12 +226,12 @@ public class PatchWork extends JFrame {
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)
 				.offspringSelector(new TournamentSelector<>())
-				.survivorsSelector //(new TournamentSelector<>())
-				(new EliteSelector<ProgramGene<Double>, Double>(
-						// Number of best individuals preserved for next generation: elites
-						POPULATION_SIZE/100,
-						// Selector used for selecting rest of population.
-						new TournamentSelector<>()))
+				.survivorsSelector(new TournamentSelector<>())
+//				(new EliteSelector<ProgramGene<Double>, Double>(
+//						// Number of best individuals preserved for next generation: elites
+//						POPULATION_SIZE/100,
+//						// Selector used for selecting rest of population.
+//						new TournamentSelector<>()))
 				.alterers(
 						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))

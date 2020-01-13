@@ -182,7 +182,7 @@ public class GameManager {
 		Dot position = pieceAndCoord.coord;
 		List<Dot> pieceShape = pieceAndCoord.shape;
 		player.getPlayerBoard().placePiece(piece, pieceShape, position);
-		int newPosition = player.getPosition()+piece.getTime();
+		int newPosition = Math.min(boardSize-1, player.getPosition()+piece.getTime());
 		player.setButtons(countNewButtons(newPosition, player, true)-piece.getCost());
 		player.setPosition(newPosition);
 		updateUsedPiece(pieceAndCoord.index);
@@ -258,7 +258,7 @@ public class GameManager {
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
 		boolean firstOption = false;
-		Double[] terminals = new Double[8];
+		Double[] terminals = new Double[11];
 		// First option: place a piece
 		for (Piece piece : pieces) {
 			if (!canSelectPiece(piece, player)) // skip too expensive pieces
@@ -272,7 +272,7 @@ public class GameManager {
 						if (board.isLegalPlacement(pieceShape, dot)) {
 							PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
 							copy.placePiece(piece, pieceShape, dot); // simulate placement
-							int new_pos = player.getPosition() + piece.getTime();
+							int new_pos = Math.min(boardSize-1, player.getPosition() + piece.getTime());
 							terminals[0] = (double)(new_pos); // new position
 							terminals[1] = (double)(countNewButtons(new_pos, player, false) -
 											piece.getCost()); // new amount of buttons
@@ -282,6 +282,9 @@ public class GameManager {
 							terminals[5]= (double)(countFreeCells(copy));
 							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot));
 							terminals[7] = (double)(countEnclosedCells(copy));
+							terminals[8] = (double)(piece.getButtons());
+							terminals[9] = (double)(piece.getCost());
+							terminals[10] = (double)(player.getLastButtonIndex());
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -300,17 +303,21 @@ public class GameManager {
 			index = (index+1)%this.piecesInCircle.size();
 		}
 		// Second option: just advance the player to get buttons
-		int numStepsToMove = secondPlayer.getPosition() - player.getPosition() + 1;
+		int new_pos = Math.min(boardSize-1, secondPlayer.getPosition()+1);
+		int numStepsToMove = new_pos - player.getPosition();
 		if (numStepsToMove > 0) { // SHOULD ALWAYS BE TRUE - it's always the turn of the player who is behind
-			terminals[0] = (double) (secondPlayer.getPosition() + 1); // new position
+			terminals[0] = (double) (new_pos);
 			terminals[1] = (double) (numStepsToMove +
-					countNewButtons(secondPlayer.getPosition() + 1, player, false));// new amount of buttons
+					countNewButtons(new_pos, player, false));// new amount of buttons
 			terminals[2]= (double)(countEmptyCorners(board));
 			terminals[3]= (double)(countCoveredFrame(board));
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 
 			terminals[5]= (double)(countFreeCells(board));
 			terminals[6]= (double)0;//no piece surroundings
             terminals[7] = (double)(countEnclosedCells(board));
+			terminals[8] = (double)(0);
+			terminals[9] = (double)(0);
+			terminals[10] = (double)(player.getLastButtonIndex());
 			double res = program.apply(terminals);
 			if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
 				firstOption = false;
@@ -322,8 +329,7 @@ public class GameManager {
 			placePiece(player, chosenPiece);
 		}
 		else
-			moveNoPiece(player, secondPlayer.getPosition() + 1);
-
+			moveNoPiece(player, new_pos);
 	}
 
 	private double countEmptySurrounding(PlayerBoard board, List<Dot> pieceShape,Dot coord)

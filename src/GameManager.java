@@ -258,7 +258,7 @@ public class GameManager {
 		boolean init_max_res = false;
 		PieceAndCoord chosenPiece = new PieceAndCoord();
 		boolean firstOption = false;
-		Double[] terminals = new Double[11];
+		Double[] terminals = new Double[12];
 		// First option: place a piece
 		for (Piece piece : pieces) {
 			if (!canSelectPiece(piece, player)) // skip too expensive pieces
@@ -285,6 +285,7 @@ public class GameManager {
 							terminals[8] = (double)(piece.getButtons());
 							terminals[9] = (double)(piece.getCost());
 							terminals[10] = (double)(player.getLastButtonIndex());
+							terminals[11] = (double)(opponent.getPosition());
 							double res = program.apply(terminals);
 							if (!init_max_res) {
 								init_max_res = true;
@@ -318,6 +319,7 @@ public class GameManager {
 			terminals[8] = (double)(0);
 			terminals[9] = (double)(0);
 			terminals[10] = (double)(player.getLastButtonIndex());
+			terminals[11] = (double)(opponent.getPosition());
 			double res = program.apply(terminals);
 			if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
 				firstOption = false;

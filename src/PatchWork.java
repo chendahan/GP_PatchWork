@@ -43,8 +43,8 @@ import java.awt.Font;
 public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 300;
 	public static final double MUTATION_PROB   = 0.001;
-	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 70;
+	public static final double CROSSOVER_PROB  = 0.75;
+	public static final int MAX_GENERATIONS    = 50;
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 4;
 	public static final int NUM_GAMES = 30;
@@ -129,7 +129,8 @@ public class PatchWork extends JFrame {
 			Var.of("h", 7),
 			Var.of("i", 8),
 			Var.of("j", 9),
-			Var.of("k", 10)
+			Var.of("k", 10),
+			Var.of("l", 11)
 	);
 
 	private static void print_solution_stats(final ProgramGene<Double> program) {
@@ -155,7 +156,7 @@ public class PatchWork extends JFrame {
 			else
 				res = game.playGame(program, opponent);
 			int score = res.ourPlayerButtons - 2 * (81 - res.opponentFilledCells);
-			int opponent_score = res.ourPlayerButtons - 2 * (81 - res.opponentFilledCells);
+			int opponent_score = res.opponentButtons - 2 * (81 - res.opponentFilledCells);
 			System.out.println("Score: " + score + " opponent score: " + opponent_score);
 			if (j==4) // play last against random player
 				random = true;

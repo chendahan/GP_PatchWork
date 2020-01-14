@@ -41,13 +41,13 @@ import java.awt.Color;
 import java.awt.Font;
 
 public class PatchWork extends JFrame {
-	public static final int POPULATION_SIZE    = 500;
-	public static final double MUTATION_PROB   = 0.05;
+	public static final int POPULATION_SIZE    = 300;
+	public static final double MUTATION_PROB   = 0.001;
 	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 100;
+	public static final int MAX_GENERATIONS    = 70;
 	public static final int MAX_DEPTH    = 15;
-	public static final int INIT_DEPTH    = 5;
-	public static final int NUM_GAMES = 5;
+	public static final int INIT_DEPTH    = 4;
+	public static final int NUM_GAMES = 30;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
 
@@ -111,7 +111,9 @@ public class PatchWork extends JFrame {
 	static final ISeq<Op<Double>> OPERATIONS = ISeq.of(
 			MathOp.ADD,
 			MathOp.SUB,
-			MathOp.MUL
+			MathOp.MUL,
+			MathOp.MIN,
+			MathOp.MAX
 	);
 
 	static final ISeq<Op<Double>> TERMINALS = ISeq.of(
@@ -130,23 +132,55 @@ public class PatchWork extends JFrame {
 			Var.of("k", 10)
 	);
 
+	private static void print_solution_stats(final ProgramGene<Double> program) {
+		System.out.println("Solution fitness: " + eval(program));
+		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
+		ProgramGene<Double> opponent = program; // initialization here is just for compilation (won't be used)
+		boolean random = false;
+		if (pop == null) {
+			random = true;
+		}
+		Results res;
+		for (int j=0; j < 6; j++) {
+			if (!random && j % 3 == 0) // play against the same opponent 3 times
+			{
+				int idx = (int) (Math.random() * pop.length());
+				opponent = pop.get(idx).getGene();
+			}
+			PieceGenerator gen = new PieceGenerator();
+			List<Piece> pieces = gen.getClassicPieces();
+			GameManager game =new GameManager(pieces);
+			if (random)
+				res = game.playGame(program);
+			else
+				res = game.playGame(program, opponent);
+			int score = res.ourPlayerButtons - 2 * (81 - res.opponentFilledCells);
+			int opponent_score = res.ourPlayerButtons - 2 * (81 - res.opponentFilledCells);
+			System.out.println("Score: " + score + " opponent score: " + opponent_score);
+			if (j==4) // play last against random player
+				random = true;
+		}
+	}
 
 	private static double eval(final ProgramGene<Double> program) {
 		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
 		ProgramGene<Double> opponent = program; // initialization here is just for compilation (won't be used)
 		boolean random = false;
-		if (pop == null)
+		if (pop == null) {
 			random = true;
-		else
-		{
-			int idx = (int) (Math.random() * pop.length());
-			opponent = pop.get(idx).getGene();
 		}
 		Results res;
 		double winScore = 0; // 1 point for tie, 2 points for win
 		double ourPlayerAvgButtons = 0;
 		double ourPlayerAvgFilled = 0;
+		double opponentAvgButtons = 0;
+		double opponentAvgFilled = 0;
 		for (int j=0; j < NUM_GAMES; j++) {
+			if (!random && j % 3 == 0) // play against the same opponent 3 times
+			{
+				int idx = (int) (Math.random() * pop.length());
+				opponent = pop.get(idx).getGene();
+			}
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
@@ -157,13 +191,17 @@ public class PatchWork extends JFrame {
 			winScore += res.winScore;
 			ourPlayerAvgButtons += res.ourPlayerButtons;
 			ourPlayerAvgFilled += res.ourPlayerFilledCells;
+			opponentAvgButtons += res.opponentButtons;
+			opponentAvgFilled += res.opponentFilledCells;
 		}
 		//System.out.println("winScore: " + winScore);
-		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
-		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
+//		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
+//		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
+//		opponentAvgButtons = opponentAvgButtons / NUM_GAMES;
+//		opponentAvgFilled = opponentAvgFilled / NUM_GAMES;
 		// max finess is: 5 + ( max buttons? ) + 20.25
 		//return winScore;
-		return 0.5 * winScore + 0.25 * ourPlayerAvgButtons + 0.25 * ourPlayerAvgFilled;
+		return 0.4*winScore + 0.2*ourPlayerAvgButtons + 0.3*ourPlayerAvgFilled + 0.1 * 100 *(1/opponentAvgButtons + 1/opponentAvgFilled);
 	}
 
 	static final Codec<ProgramGene<Double>, ProgramGene<Double>> CODEC =
@@ -225,13 +263,13 @@ public class PatchWork extends JFrame {
 		Engine<ProgramGene<Double>, Double> engine = Engine
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)
-				.offspringSelector(new TournamentSelector<>())
-				.survivorsSelector(new TournamentSelector<>())
-//				(new EliteSelector<ProgramGene<Double>, Double>(
-//						// Number of best individuals preserved for next generation: elites
-//						POPULATION_SIZE/100,
-//						// Selector used for selecting rest of population.
-//						new TournamentSelector<>()))
+				.offspringSelector(new TournamentSelector<>(3))
+				.survivorsSelector//(new TournamentSelector<>())
+				(new EliteSelector<ProgramGene<Double>, Double>(
+						// Number of best individuals preserved for next generation: elites
+						POPULATION_SIZE/100,
+						// Selector used for selecting rest of population.
+						new TournamentSelector<>(3)))
 				.alterers(
 						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))
@@ -258,7 +296,7 @@ public class PatchWork extends JFrame {
 //        MathExpr.rewrite(tree); // Simplify result program.
 //        System.out.println("Generations: " + result.getTotalGenerations());
 //        System.out.println("Function:    " + new MathExpr(tree));
-		System.out.println("Solution fitness: " + eval(result.getGene()));
+		print_solution_stats(result.getGene());
 //		System.out.println("Num of evals: " + count);
 
 		SwingUtilities.invokeAndWait(() -> {

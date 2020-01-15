@@ -43,7 +43,7 @@ import java.awt.Font;
 public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 300;
 	public static final double MUTATION_PROB   = 0.001;
-	public static final double CROSSOVER_PROB  = 0.75;
+	public static final double CROSSOVER_PROB  = 0.7;
 	public static final int MAX_GENERATIONS    = 50;
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 4;
@@ -129,8 +129,7 @@ public class PatchWork extends JFrame {
 			Var.of("h", 7),
 			Var.of("i", 8),
 			Var.of("j", 9),
-			Var.of("k", 10),
-			Var.of("l", 11)
+			Var.of("k", 10)
 	);
 
 	private static void print_solution_stats(final ProgramGene<Double> program) {
@@ -177,18 +176,17 @@ public class PatchWork extends JFrame {
 		double opponentAvgButtons = 0;
 		double opponentAvgFilled = 0;
 		for (int j=0; j < NUM_GAMES; j++) {
-			if (!random && j % 3 == 0) // play against the same opponent 3 times
-			{
-				int idx = (int) (Math.random() * pop.length());
-				opponent = pop.get(idx).getGene();
-			}
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
-			if (random)
+			if (random) {
 				res = game.playGame(program);
-			else
+			}
+			else {
+				int idx = (int) (Math.random() * pop.length());
+				opponent = pop.get(idx).getGene();
 				res = game.playGame(program, opponent);
+			}
 			winScore += res.winScore;
 			ourPlayerAvgButtons += res.ourPlayerButtons;
 			ourPlayerAvgFilled += res.ourPlayerFilledCells;
@@ -196,13 +194,9 @@ public class PatchWork extends JFrame {
 			opponentAvgFilled += res.opponentFilledCells;
 		}
 		//System.out.println("winScore: " + winScore);
-//		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
-//		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
-//		opponentAvgButtons = opponentAvgButtons / NUM_GAMES;
-//		opponentAvgFilled = opponentAvgFilled / NUM_GAMES;
-		// max finess is: 5 + ( max buttons? ) + 20.25
-		//return winScore;
-		return 0.4*winScore + 0.2*ourPlayerAvgButtons + 0.3*ourPlayerAvgFilled + 0.1 * 100 *(1/opponentAvgButtons + 1/opponentAvgFilled);
+		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
+		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
+		return ourPlayerAvgButtons + 2*ourPlayerAvgFilled; //+ 0.1 * 100 *(1/opponentAvgButtons + 1/opponentAvgFilled);
 	}
 
 	static final Codec<ProgramGene<Double>, ProgramGene<Double>> CODEC =

@@ -118,6 +118,8 @@ public class GameManager {
         int count = 0;
         for (int i=0;i< playerBoardSize; i++) {
             for (int j = 0; j < playerBoardSize; j++) {
+            if(board.getCell(i,j) == false)	
+            {
                 if (i==0 && j==0) {
                     if (board.getCell(0, 1) == true && board.getCell(1, 0) == true)
                         count++;
@@ -169,7 +171,10 @@ public class GameManager {
                         count++;
                 }
             }
+            }
         }
+        if(count>22)
+        	System.out.println("countEnclosedCells bigger then 22 : "+count);
         return count;
     }
 
@@ -305,7 +310,7 @@ public class GameManager {
 							terminals[4]= (double)(pieceShape.size()/8);
 							terminals[5]= (double)(countFreeCells(copy)/81);
 							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))/8;
-							terminals[7] = (double)(countEnclosedCells(copy))/30;
+							terminals[7] = (double)(countEnclosedCells(copy))/22;
 							terminals[8] = (double)(piece.getButtons()/3);
 							terminals[9] = (double)(piece.getCost()/10);
 							terminals[10] = (double)(player.getLastButtonIndex()/50);
@@ -339,7 +344,7 @@ public class GameManager {
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 
 			terminals[5]= (double)(countFreeCells(board))/81;
 			terminals[6]= (double)0;//no piece surroundings
-            terminals[7] = (double)(countEnclosedCells(board))/7;
+            terminals[7] = (double)(countEnclosedCells(board))/22;
 			terminals[8] = (double)(0);
 			terminals[9] = (double)(0);
 			terminals[10] = (double)(player.getLastButtonIndex())/50;

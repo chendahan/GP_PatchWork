@@ -44,7 +44,7 @@ public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 300;
 	public static final double MUTATION_PROB   = 0.001;
 	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 100;
+	public static final int MAX_GENERATIONS    = 70;
 	public static final int MAX_DEPTH    = 20;
 	public static final int INIT_DEPTH    = 4;
 	public static final int NUM_GAMES = 30;
@@ -138,7 +138,8 @@ public class PatchWork extends JFrame {
 			Var.of("h", 7),
 			Var.of("i", 8),
 			Var.of("j", 9),
-			Var.of("k", 10)
+			Var.of("k", 10),
+			Var.of("l", 11)
 	);
 
 	private static void print_solution_stats(final ProgramGene<Double> program) {

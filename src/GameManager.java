@@ -97,6 +97,18 @@ public class GameManager {
             count += board.getCell(i, this.playerBoardSize - 1) ? 1 : 0;
             count += board.getCell(this.playerBoardSize - 1, i) ? 1 : 0;
         }
+        
+        if(board.getCell(0, 0))
+        	count-=1;
+
+        if(board.getCell(0, 8))
+        	count-=1;
+
+        if(board.getCell(8, 0))
+        	count-=1;
+
+        if(board.getCell(8, 8))
+        	count-=1;
 
         return count;
     }

@@ -44,10 +44,11 @@ public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 300;
 	public static final double MUTATION_PROB   = 0.001;
 	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 50;
-	public static final int MAX_DEPTH    = 15;
+	public static final int MAX_GENERATIONS    = 100;
+	public static final int MAX_DEPTH    = 20;
 	public static final int INIT_DEPTH    = 4;
 	public static final int NUM_GAMES = 30;
+	public static final int TOUR_SIZE = 10;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
 
@@ -113,12 +114,20 @@ public class PatchWork extends JFrame {
 			MathOp.SUB,
 			MathOp.MUL,
 			MathOp.MIN,
-			MathOp.MAX
+			MathOp.MAX,
+			MathOp.GT,
+			MathOp.NEG
 	);
 
 	static final ISeq<Op<Double>> TERMINALS = ISeq.of(
 			EphemeralConst.of(() ->
-					(double)RandomRegistry.getRandom().nextInt(10)),
+					 RandomRegistry.getRandom().nextDouble()),
+			EphemeralConst.of(() ->
+					 RandomRegistry.getRandom().nextDouble()),
+			EphemeralConst.of(() ->
+					RandomRegistry.getRandom().nextDouble()),
+			EphemeralConst.of(() ->
+					RandomRegistry.getRandom().nextDouble()),
 			Var.of("a", 0),
 			Var.of("b", 1),
 			Var.of("c", 2),
@@ -141,12 +150,18 @@ public class PatchWork extends JFrame {
 			random = true;
 		}
 		Results res;
-		for (int j=0; j < 6; j++) {
-			if (!random && j % 3 == 0) // play against the same opponent 3 times
-			{
-				int idx = (int) (Math.random() * pop.length());
-				opponent = pop.get(idx).getGene();
-			}
+		int wins = 0;
+		int wins_random = 0;
+		for (int j=0; j < 100; j++) {
+//			if (!random && j % 3 == 0) // play against the same opponent 3 times
+//			{
+//				int idx = (int) (Math.random() * pop.length());
+//				opponent = pop.get(idx).getGene();
+//			}
+			if (j < 30) // sanity check: play against random player
+				random = true;
+			else
+				random = false;
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
@@ -154,17 +169,24 @@ public class PatchWork extends JFrame {
 				res = game.playGame(program);
 			else
 				res = game.playGame(program, opponent);
-			int score = res.ourPlayerButtons - 2 * (81 - res.opponentFilledCells);
+			int score = res.ourPlayerButtons - 2 * (81 - res.ourPlayerFilledCells);
 			int opponent_score = res.opponentButtons - 2 * (81 - res.opponentFilledCells);
-			System.out.println("Score: " + score + " opponent score: " + opponent_score);
-			if (j==4) // play last against random player
-				random = true;
+			if (random && score > opponent_score) {
+				if (random)
+					wins_random++;
+				else
+					wins++;
+			}
+			System.out.println("Score: " + score + " buttons: " + res.ourPlayerButtons +
+					" filled: " + res.ourPlayerFilledCells);
+			System.out.println("Opponent score: " + opponent_score + " buttons: " + res.opponentButtons +
+					" filled: " + res.opponentFilledCells);
 		}
+		System.out.println("won against random: " + wins_random + "/30, won against GP: " + wins + "/70");
 	}
 
 	private static double eval(final ProgramGene<Double> program) {
 		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
-		ProgramGene<Double> opponent = program; // initialization here is just for compilation (won't be used)
 		boolean random = false;
 		if (pop == null) {
 			random = true;
@@ -175,7 +197,7 @@ public class PatchWork extends JFrame {
 		double ourPlayerAvgFilled = 0;
 		double opponentAvgButtons = 0;
 		double opponentAvgFilled = 0;
-		for (int j=0; j < NUM_GAMES; j++) {
+		for (int j=0; j < TOUR_SIZE; j++) {
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
@@ -184,7 +206,7 @@ public class PatchWork extends JFrame {
 			}
 			else {
 				int idx = (int) (Math.random() * pop.length());
-				opponent = pop.get(idx).getGene();
+				ProgramGene<Double> opponent = pop.get(idx).getGene();
 				res = game.playGame(program, opponent);
 			}
 			winScore += res.winScore;
@@ -194,8 +216,8 @@ public class PatchWork extends JFrame {
 			opponentAvgFilled += res.opponentFilledCells;
 		}
 		//System.out.println("winScore: " + winScore);
-		ourPlayerAvgButtons = ourPlayerAvgButtons / NUM_GAMES;
-		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
+		ourPlayerAvgButtons = ourPlayerAvgButtons / TOUR_SIZE;
+		ourPlayerAvgFilled = ourPlayerAvgFilled / TOUR_SIZE;
 		return ourPlayerAvgButtons + 2*ourPlayerAvgFilled; //+ 0.1 * 100 *(1/opponentAvgButtons + 1/opponentAvgFilled);
 	}
 
@@ -258,13 +280,13 @@ public class PatchWork extends JFrame {
 		Engine<ProgramGene<Double>, Double> engine = Engine
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)
-				.offspringSelector(new TournamentSelector<>(3))
-				.survivorsSelector//(new TournamentSelector<>())
-				(new EliteSelector<ProgramGene<Double>, Double>(
-						// Number of best individuals preserved for next generation: elites
-						POPULATION_SIZE/100,
-						// Selector used for selecting rest of population.
-						new TournamentSelector<>(3)))
+				.offspringSelector(new TournamentSelector<>(TOUR_SIZE))
+				.survivorsSelector(new TournamentSelector<>(TOUR_SIZE))
+//				(new EliteSelector<ProgramGene<Double>, Double>(
+//						// Number of best individuals preserved for next generation: elites
+//						POPULATION_SIZE/100,
+//						// Selector used for selecting rest of population.
+//						new TournamentSelector<>(3)))
 				.alterers(
 						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))
@@ -288,11 +310,7 @@ public class PatchWork extends JFrame {
 		System.out.println("Solution: " + result);
 
 		System.out.println(Tree.toString(result.getGene()));
-//        MathExpr.rewrite(tree); // Simplify result program.
-//        System.out.println("Generations: " + result.getTotalGenerations());
-//        System.out.println("Function:    " + new MathExpr(tree));
 		print_solution_stats(result.getGene());
-//		System.out.println("Num of evals: " + count);
 
 		SwingUtilities.invokeAndWait(() -> {
 			PatchWork example_p = new PatchWork();
@@ -302,103 +320,6 @@ public class PatchWork extends JFrame {
 			example_p.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 			example_p.setVisible(true);
 		});
-
-
-
-
-
-		
-//		for(int i=0;i<pieces.size();i++) {
-//			String[][] board=new String[5][5];
-//			for (int x=0;x<5;x++)
-//			{
-//				for (int y=0;y<5;y++)
-//				{
-//					board[x][y]="-";
-//				}
-//			}
-//			Piece p = pieces.get(i);
-//			System.out.println("shape id:"+ p.getId());
-//			for(Dot sq : p.getShape()) {
-//				board[sq.getRow()][sq.getColumn()]="+";
-//			}
-//			for (int x=0;x<5;x++)
-//			{
-//				for (int y=0;y<5;y++)
-//				{
-//					System.out.print(board[x][y]);
-//				}
-//				System.out.println();
-//			}
-//
-//			if(p.getShape_90() != null)
-//			{
-//				for (int x=0;x<5;x++)
-//				{
-//					for (int y=0;y<5;y++)
-//					{
-//						board[x][y]="-";
-//					}
-//				}
-//				System.out.println("shape 90:"+ p.getId());
-//				for(Dot sq : p.getShape_90()) {
-//					board[sq.getRow()][sq.getColumn()]="+";
-//				}
-//				for (int x=0;x<5;x++)
-//				{
-//					for (int y=0;y<5;y++)
-//					{
-//						System.out.print(board[x][y]);
-//					}
-//					System.out.println();
-//				}
-//			}
-//			if(p.getShape_180() != null)
-//			{
-//				for (int x=0;x<5;x++)
-//				{
-//					for (int y=0;y<5;y++)
-//					{
-//						board[x][y]="-";
-//					}
-//				}
-//				System.out.println("shape 180:"+ p.getId());
-//				for(Dot sq : p.getShape_180()) {
-//					board[sq.getRow()][sq.getColumn()]="+";
-//				}
-//				for (int x=0;x<5;x++)
-//				{
-//					for (int y=0;y<5;y++)
-//					{
-//						System.out.print(board[x][y]);
-//					}
-//					System.out.println();
-//				}
-//			}
-//			if(p.getShape_270() != null)
-//			{
-//				for (int x=0;x<5;x++)
-//				{
-//					for (int y=0;y<5;y++)
-//					{
-//						board[x][y]="-";
-//					}
-//				}
-//				System.out.println("shape 270:"+ p.getId());
-//				for(Dot sq : p.getShape_270()) {
-//					board[sq.getRow()][sq.getColumn()]="+";
-//				}
-//				for (int x=0;x<5;x++)
-//				{
-//					for (int y=0;y<5;y++)
-//					{
-//						System.out.print(board[x][y]);
-//					}
-//					System.out.println();
-//				}
-//			}
-//		}
-				
 	}
 
 }

@@ -304,7 +304,7 @@ public class GameManager {
 							terminals[3]= (double)(countCoveredFrame(copy)/32);
 							terminals[4]= (double)(pieceShape.size()/8);
 							terminals[5]= (double)(countFreeCells(copy)/81);
-							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))/16;
+							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))/8;
 							terminals[7] = (double)(countEnclosedCells(copy))/30;
 							terminals[8] = (double)(piece.getButtons()/3);
 							terminals[9] = (double)(piece.getCost()/10);
@@ -362,17 +362,21 @@ public class GameManager {
 	{
 		int count=0;
 		List<Dot> pieceShapCopy=new ArrayList<Dot>();
+		HashMap<Integer,Integer> hashres=new HashMap<>(); 
 		for(Dot dot:pieceShape)
 			pieceShapCopy.add(new Dot(dot.getRow(),dot.getColumn()));
-			
+		
 		//check up- x+1 for all dots
 		for(Dot dot:pieceShapCopy)
-		{
+		{	
 			dot.setColumn(dot.getColumn()+coord.getColumn());
 			dot.setRow(dot.getRow()+1 +coord.getRow());
 			if ((dot.getRow()<this.playerBoardSize) && !pieceShape.contains(dot))
 			{
-				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+				if (!board.getCell(dot.getRow(),dot.getColumn()))
+				{
+					hashres.put(dot.getRow(), dot.getColumn());
+				}
 			}
 		}		
 		//check down- x-1 for all dots
@@ -381,7 +385,10 @@ public class GameManager {
 			dot.setRow(dot.getRow()-2);
 			if ((dot.getRow()>0) &&!pieceShape.contains(dot))
 			{
-				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+				if (!board.getCell(dot.getRow(),dot.getColumn()))
+				{
+					hashres.put(dot.getRow(), dot.getColumn());
+				}
 			}
 			dot.setRow(dot.getRow()+1);
 		}
@@ -392,7 +399,10 @@ public class GameManager {
 			dot.setColumn(dot.getColumn()+1);
 			if ((dot.getColumn()<this.playerBoardSize) && !pieceShape.contains(dot))
 			{
-				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+				if (!board.getCell(dot.getRow(),dot.getColumn()))
+				{
+					hashres.put(dot.getRow(), dot.getColumn());
+				}
 			}
 		}
 		//check left- y-1 for all dots
@@ -401,11 +411,15 @@ public class GameManager {
 			dot.setColumn(dot.getColumn()-2);
 			if ((dot.getColumn()>0) && !pieceShape.contains(dot))
 			{
-				count+= board.getCell(dot.getRow(),dot.getColumn())? 0:1;
+				if (!board.getCell(dot.getRow(),dot.getColumn()))
+				{
+					hashres.put(dot.getRow(), dot.getColumn());
+				}
 			}
 		}
-		
-		return count;
+		if(hashres.size()>7)
+			System.out.println("countEmptySurrounding: size bigger then 7: "+hashres.size());
+		return hashres.size();
 	}
 
 	public Results getResults(Player opponent, Player gpPlayer)

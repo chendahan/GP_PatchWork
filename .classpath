@@ -7,5 +7,6 @@
 	<classpathentry kind="lib" path="C:/Users/user1/Downloads/jar_files (4)/jenetics-4.4.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/user1/Downloads/jar_files (3)/jpx-1.6.1.jar"/>
 	<classpathentry kind="lib" path="C:/Users/user1/Downloads/jenetics-5.0.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/user1/Downloads/jar_files (6)/jfreechart-1.5.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

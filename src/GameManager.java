@@ -173,8 +173,6 @@ public class GameManager {
             }
             }
         }
-        if(count>22)
-        	System.out.println("countEnclosedCells bigger then 22 : "+count);
         return count;
     }
 
@@ -219,7 +217,56 @@ public class GameManager {
 		
 		return true;
 	}
-	
+
+
+
+	// Used by the random player
+	public void makeStrategicMove()
+	{
+		float maxButtonRate = 0;
+		List<Piece> pieces = getNextPiecesAvailableToSelect();
+		PlayerBoard board = opponent.getPlayerBoard();
+		int index = pieceIndex;
+		List<PieceAndCoord> availablePieces = new ArrayList<>();
+		for (Piece piece : pieces) {
+			if (!canSelectPiece(piece, opponent)) // skip too expensive pieces
+				continue;
+			for (int i = 0; i < playerBoardSize; i++) {
+				for (int j = 0; j < playerBoardSize; j++) {
+					Dot dot = new Dot(i, j);
+					List<List<Dot>> shapesList = Arrays.asList(piece.getShape(), piece.getShape_90(),
+							piece.getShape_180(), piece.getShape_270());
+					for (List<Dot> pieceShape : shapesList) {
+						if (board.isLegalPlacement(pieceShape, dot)) {
+							float buttonRate = (2*pieceShape.size() +
+									piece.getButtons()*(9-opponent.getLastButtonIndex()) -
+									piece.getCost()) / piece.getTime();
+							if (buttonRate == maxButtonRate) {
+								PieceAndCoord option = new PieceAndCoord(piece, dot, pieceShape, index);
+								availablePieces.add(option);
+							}
+							if (buttonRate > maxButtonRate) {
+								availablePieces.clear();
+								maxButtonRate = buttonRate;
+								PieceAndCoord option = new PieceAndCoord(piece, dot, pieceShape, index);
+								availablePieces.add(option);
+							}
+						}
+					}
+				}
+			}
+			index = (index+1)%this.piecesInCircle.size();
+		}
+		if (maxButtonRate >= 1) {
+			int chosenAtIndex = (int) (Math.random() * availablePieces.size());
+			PieceAndCoord chosenPiece = availablePieces.get(chosenAtIndex);
+			placePiece(opponent, chosenPiece);
+		}
+		else
+			moveNoPiece(opponent, ourPlayer.getPosition() + 1);
+		return;
+
+	}
 
 	// Used by the random player
 	public void makeRandomMove()
@@ -263,7 +310,6 @@ public class GameManager {
 		}
 		// If there are no available pieces or placePiece is false
 		moveNoPiece(opponent, ourPlayer.getPosition() + 1);
-
 	}
 	
 	public void checkTerminals(Double[] terminals,int option)
@@ -310,10 +356,10 @@ public class GameManager {
 							terminals[4]= (double)(pieceShape.size()/8);
 							terminals[5]= (double)(countFreeCells(copy)/81);
 							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))/8;
-							terminals[7] = (double)(countEnclosedCells(copy))/22;
+							terminals[7] = (double)(countEnclosedCells(copy))/24;
 							terminals[8] = (double)(piece.getButtons()/3);
 							terminals[9] = (double)(piece.getCost()/10);
-							terminals[10] = (double)(player.getLastButtonIndex()/50);
+							terminals[10] = (double)(player.getLastButtonIndex()/9);
 							terminals[11] = (double)(opponent.getPosition()/50);
 							checkTerminals(terminals,1);
 							double res = program.apply(terminals);
@@ -345,10 +391,10 @@ public class GameManager {
 			terminals[4]= (double)(0);//pieceShape.size()- no shape 
 			terminals[5]= (double)(countFreeCells(board))/81;
 			terminals[6]= (double)0;//no piece surroundings
-            terminals[7] = (double)(countEnclosedCells(board))/22;
+            terminals[7] = (double)(countEnclosedCells(board))/24;
 			terminals[8] = (double)(0);
 			terminals[9] = (double)(0);
-			terminals[10] = (double)(player.getLastButtonIndex())/50;
+			terminals[10] = (double)(player.getLastButtonIndex())/9;
 			terminals[11] = (double)(opponent.getPosition()/50);
 			checkTerminals(terminals,2);
 			double res = program.apply(terminals);
@@ -485,7 +531,7 @@ public class GameManager {
 	}
 
 
-	public Results playGame(final ProgramGene<Double> program)
+	public Results playGame(final ProgramGene<Double> program, boolean random)
 	{
 		int first = (int) (Math.random() * 2);
 		int i = 0;
@@ -498,7 +544,10 @@ public class GameManager {
 			if (next == opponent) {
 				if (opponent.getPosition() == boardSize-1)
 					continue;
-				makeRandomMove();
+				if (random)
+					makeRandomMove();
+				else
+					makeStrategicMove();
 			} else { // next == player2
 				if (ourPlayer.getPosition() == boardSize-1)
 					continue;

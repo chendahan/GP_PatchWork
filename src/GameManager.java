@@ -406,6 +406,7 @@ public class GameManager {
 		if (firstOption)
 		{
 			placePiece(player, chosenPiece);
+			player.printBoard();
 		}
 		else
 			moveNoPiece(player, new_pos);

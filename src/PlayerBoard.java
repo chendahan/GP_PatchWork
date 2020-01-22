@@ -60,6 +60,21 @@ public class PlayerBoard {
 		}
 		return count;
 	}
+
+	public void print()
+	{
+		for(int i=0; i < this.boardSize; i++)
+		{
+			for(int j=0; j < this.boardSize; j++)
+			{
+				if(this.playerBoard[i][j])
+					System.out.print("+");
+				else
+					System.out.print("-");
+			}
+			System.out.println();
+		}
+	}
 }
 
 

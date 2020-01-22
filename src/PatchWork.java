@@ -44,11 +44,11 @@ public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 400;
 	public static final double MUTATION_PROB   = 0.001;
 	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 100;
+	public static final int MAX_GENERATIONS    = 50;
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 4;
-	public static final int NUM_GAMES = 3;
-	public static final int TOUR_SIZE = 3;
+	public static final int NUM_GAMES = 100;
+	public static final int TOUR_SIZE = 5;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
 
@@ -129,18 +129,18 @@ public class PatchWork extends JFrame {
 					(double)RandomRegistry.getRandom().nextInt(10)),
 			EphemeralConst.of(() ->
 					(double)RandomRegistry.getRandom().nextInt(10)),
-			Var.of("a", 0),
-			Var.of("b", 1),
-			Var.of("c", 2),
-			Var.of("d", 3),
-			Var.of("e", 4),
-			Var.of("f", 5),
-			Var.of("g", 6),
-			Var.of("h", 7),
-			Var.of("i", 8),
-			Var.of("j", 9),
-			Var.of("k", 10),
-			Var.of("l", 11)
+			Var.of("a", 0), // new position
+			Var.of("b", 1), // new amount of buttons
+			Var.of("c", 2), // empty corners
+			Var.of("d", 3), // covered frame
+			Var.of("e", 4), // piece size
+			Var.of("f", 5), // number empty cells
+			Var.of("g", 6), // empty surroundings of a piece
+			Var.of("h", 7), // enclosed cells
+			Var.of("i", 8), // number of buttons on piece
+			Var.of("j", 9), // piece cost
+			Var.of("k", 10), // previous button index
+			Var.of("l", 11) // opponent position
 	);
 
 	private static void print_solution_stats(final ProgramGene<Double> program) {
@@ -211,8 +211,9 @@ public class PatchWork extends JFrame {
 	private static double eval(final ProgramGene<Double> program) {
 		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
 		boolean random = false;
+		boolean strategic = false;
 		if (pop == null) {
-			random = true;
+			strategic = true;
 		}
 		Results res;
 		double winScore = 0; // 1 point for tie, 2 points for win
@@ -220,10 +221,12 @@ public class PatchWork extends JFrame {
 		double ourPlayerAvgFilled = 0;
 		double opponentAvgButtons = 0;
 		double opponentAvgFilled = 0;
-		boolean strategic = false;
-		if (gen < 49)
-			strategic = true;
+		int strategicDefeat = 0;
+//		else if (gen < 59)
+//			strategic = true;
 		for (int j=0; j < NUM_GAMES; j++) {
+			if (j < 15)
+				strategic = true;
 			PieceGenerator gen = new PieceGenerator();
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
@@ -232,8 +235,9 @@ public class PatchWork extends JFrame {
 			}
 			else if (strategic) {
 				res = game.playGame(program, false);
+				strategicDefeat++;
 			}
-			else { // play tour_size games against a real individual
+			else { // play against a GP individual
 				int idx = (int) (Math.random() * pop.length());
 				ProgramGene<Double> opponent = pop.get(idx).getGene();
 				res = game.playGame(program, opponent);
@@ -249,7 +253,7 @@ public class PatchWork extends JFrame {
 		ourPlayerAvgFilled = ourPlayerAvgFilled / NUM_GAMES;
 //		opponentAvgButtons = opponentAvgButtons / NUM_GAMES;
 //		opponentAvgFilled = opponentAvgFilled / NUM_GAMES;
-		return ourPlayerAvgButtons + 2*ourPlayerAvgFilled;
+		return ourPlayerAvgButtons + 2*ourPlayerAvgFilled + strategicDefeat;
 	}
 
 	static final Codec<ProgramGene<Double>, ProgramGene<Double>> CODEC =
@@ -285,6 +289,12 @@ public class PatchWork extends JFrame {
 		return median;
 	}
 
+	private static double print_best(Phenotype<ProgramGene<Double>, Double> phenotype){
+		System.out.println("Best in gen " + gen + "fitness : " + phenotype.getFitness());
+		System.out.println("Best in gen " + gen + "tree: " + phenotype.getGenotype());
+		return phenotype.getFitness();
+	}
+
 	private static double calculate_permutation_average_fitness(ISeq<Phenotype<ProgramGene<Double>, Double>> phenotypes){
 		double sum = 0;
 		for(int i = 0; i < phenotypes.length(); i++){
@@ -309,6 +319,7 @@ public class PatchWork extends JFrame {
 		Engine<ProgramGene<Double>, Double> engine = Engine
 				.builder(PatchWork::eval, CODEC)
 				.populationSize(POPULATION_SIZE)
+				//.offspringSelector(new TournamentSelector<>(TOUR_SIZE))
 				.offspringSelector(new TournamentSelector<>(TOUR_SIZE))
 				.survivorsSelector//(new TournamentSelector<>(TOUR_SIZE))
 				(new EliteSelector<ProgramGene<Double>, Double>(
@@ -316,6 +327,7 @@ public class PatchWork extends JFrame {
 						3,
 						// Selector used for selecting rest of population.
 						new TournamentSelector<>(TOUR_SIZE)))
+						//new TournamentSelector<>(TOUR_SIZE)))
 				.alterers(
 						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))
@@ -328,7 +340,7 @@ public class PatchWork extends JFrame {
 				// Terminate the evolution after maximal 100 generations.
 				.limit(MAX_GENERATIONS)
 				.peek(er -> {POP.set(er.getGenotypes());
-					best_fitness.add(er.getBestFitness());
+					best_fitness.add(print_best(er.getBestPhenotype()));
 					worst_fitness.add(er.getWorstFitness());
 					average_fitness.add(calculate_permutation_average_fitness(er.getPopulation()));
 					median_fitness.add(calculate_permutation_median_fitness(er.getPopulation()));})

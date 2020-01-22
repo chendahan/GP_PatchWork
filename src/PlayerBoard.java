@@ -74,6 +74,8 @@ public class PlayerBoard {
 			}
 			System.out.println();
 		}
+		System.out.println();
+		System.out.println();
 	}
 }
 

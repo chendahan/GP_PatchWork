@@ -48,7 +48,7 @@ public class PatchWork extends JFrame {
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 4;
 	public static final int NUM_GAMES = 100;
-	public static final int TOUR_SIZE = 5;
+	public static final int TOUR_SIZE = 3;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
 
@@ -235,7 +235,6 @@ public class PatchWork extends JFrame {
 			}
 			else if (strategic) {
 				res = game.playGame(program, false);
-				strategicDefeat++;
 			}
 			else { // play against a GP individual
 				int idx = (int) (Math.random() * pop.length());
@@ -243,6 +242,8 @@ public class PatchWork extends JFrame {
 				res = game.playGame(program, opponent);
 			}
 			winScore += res.winScore;
+			if (strategic && res.winScore > 0)
+				strategicDefeat += res.winScore;
 			ourPlayerAvgButtons += res.ourPlayerButtons;
 			ourPlayerAvgFilled += res.ourPlayerFilledCells;
 			opponentAvgButtons += res.opponentButtons;
@@ -290,8 +291,8 @@ public class PatchWork extends JFrame {
 	}
 
 	private static double print_best(Phenotype<ProgramGene<Double>, Double> phenotype){
-		System.out.println("Best in gen " + gen + "fitness : " + phenotype.getFitness());
-		System.out.println("Best in gen " + gen + "tree: " + phenotype.getGenotype());
+		System.out.println("Best in gen " + gen + " fitness : " + phenotype.getFitness());
+		System.out.println("Best in gen " + gen + " tree: " + phenotype.getGenotype());
 		return phenotype.getFitness();
 	}
 
@@ -327,7 +328,6 @@ public class PatchWork extends JFrame {
 						3,
 						// Selector used for selecting rest of population.
 						new TournamentSelector<>(TOUR_SIZE)))
-						//new TournamentSelector<>(TOUR_SIZE)))
 				.alterers(
 						new Mutator<>(MUTATION_PROB),
 						new SingleNodeCrossover<>(CROSSOVER_PROB))

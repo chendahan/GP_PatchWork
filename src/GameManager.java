@@ -324,7 +324,7 @@ public class GameManager {
 		
 	}
 
-	public void makeMove(final ProgramGene<Double> program, Player player, Player secondPlayer)
+	public void makeMove(final ProgramGene<Double> program, Player player, Player secondPlayer,Boolean printBoard)
 	{
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
 		int index = pieceIndex;
@@ -402,11 +402,13 @@ public class GameManager {
 				firstOption = false;
 			}
 		}
+		
 
 		if (firstOption)
 		{
 			placePiece(player, chosenPiece);
-			player.printBoard();
+			if(printBoard)
+				player.printBoard();
 		}
 		else
 			moveNoPiece(player, new_pos);
@@ -532,7 +534,7 @@ public class GameManager {
 	}
 
 
-	public Results playGame(final ProgramGene<Double> program, boolean random)
+	public Results playGame(final ProgramGene<Double> program, boolean random, boolean print)
 	{
 		int first = (int) (Math.random() * 2);
 		int i = 0;
@@ -552,14 +554,14 @@ public class GameManager {
 			} else { // next == player2
 				if (ourPlayer.getPosition() == boardSize-1)
 					continue;
-				makeMove(program, ourPlayer, opponent);
+				makeMove(program, ourPlayer, opponent,print);
 			}
 			next = getNextPlayer();
 		}
 		return getResults(opponent, ourPlayer);
 	}
 
-	public Results playGame(final ProgramGene<Double> program, final ProgramGene<Double> programOpponent)
+	public Results playGame(final ProgramGene<Double> program, final ProgramGene<Double> programOpponent, boolean print)
 	{
 		int first = (int) (Math.random() * 2);
 		int i = 0;
@@ -572,11 +574,11 @@ public class GameManager {
 			if (next == opponent) {
 				if (opponent.getPosition() == boardSize-1)
 					continue;
-				makeMove(programOpponent, opponent, ourPlayer);
+				makeMove(programOpponent, opponent, ourPlayer,false);
 			} else { // next == player2
 				if (ourPlayer.getPosition() == boardSize-1)
 					continue;
-				makeMove(program, ourPlayer, opponent);
+				makeMove(program, ourPlayer, opponent,print);
 			}
 			next = getNextPlayer();
 		}

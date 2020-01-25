@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,6 +66,7 @@ public class PlayerBoard {
 
 	public void print()
 	{
+		//BufferedWriter writer = new BufferedWriter(new FileWriter("jeneticCheck.txt"));
 		for(int i=0; i < this.boardSize; i++)
 		{
 			for(int j=0; j < this.boardSize; j++)

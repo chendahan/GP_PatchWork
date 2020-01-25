@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.jenetics.*;
 import io.jenetics.engine.Engine;
@@ -44,10 +45,10 @@ public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 400;
 	public static final double MUTATION_PROB   = 0.001;
 	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 50;
+	public static final int MAX_GENERATIONS    = 100;
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 4;
-	public static final int NUM_GAMES = 100;
+	public static final int NUM_GAMES = 50;
 	public static final int TOUR_SIZE = 3;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
@@ -116,8 +117,8 @@ public class PatchWork extends JFrame {
 			MathOp.MUL,
 			MathOp.MIN,
 			MathOp.MAX,
-			MathOp.GT,
 			MathOp.NEG
+			MathOp.GT
 	);
 
 	static final ISeq<Op<Double>> TERMINALS = ISeq.of(
@@ -143,7 +144,7 @@ public class PatchWork extends JFrame {
 			Var.of("l", 11) // opponent position
 	);
 
-	private static void print_solution_stats(final ProgramGene<Double> program) {
+	private static void print_solution_stats(final ProgramGene<Double> program) throws InterruptedException {
 		System.out.println("Solution fitness: " + eval(program));
 		final ISeq<Genotype<ProgramGene<Double>>> pop = POP.get();
 		ProgramGene<Double> opponent = program; // initialization here is just for compilation (won't be used)
@@ -160,6 +161,8 @@ public class PatchWork extends JFrame {
 		float avgButtons = 0;
 		float avgFilled = 0;
 		float sumScore = 0;
+		ReentrantLock lock = new ReentrantLock();
+		lock.lock();
 		for (int j=0; j < 130; j++) {
 			if (j < 30) // sanity check: play against random player
 				random = true;
@@ -171,11 +174,19 @@ public class PatchWork extends JFrame {
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
 			if (random)
-				res = game.playGame(program, true);
+			{
+				res = game.playGame(program, true,false);
+				System.out.println("Done random");
+			}
 			else if (strategic)
-				res = game.playGame(program, false);
+			{
+				res = game.playGame(program, false,true);
+				System.out.println("Done strategic");
+			}
 			else
-				res = game.playGame(program, opponent);
+			{
+				res = game.playGame(program, opponent,false);
+			}
 			int score = res.ourPlayerButtons - 2 * (81 - res.ourPlayerFilledCells);
 			sumScore += score;
 			avgButtons += res.ourPlayerButtons;
@@ -198,6 +209,7 @@ public class PatchWork extends JFrame {
 //			System.out.println("Opponent score: " + opponent_score + " buttons: " + res.opponentButtons +
 //					" filled: " + res.opponentFilledCells);
 		}
+		lock.unlock();
 		avgButtons = avgButtons / 130;
 		avgFilled = avgFilled / 130;
 		float avgFit = avgButtons + 2*avgFilled;
@@ -231,15 +243,15 @@ public class PatchWork extends JFrame {
 			List<Piece> pieces = gen.getClassicPieces();
 			GameManager game =new GameManager(pieces);
 			if (random) {
-				res = game.playGame(program, true);
+				res = game.playGame(program, true,false);
 			}
 			else if (strategic) {
-				res = game.playGame(program, false);
+				res = game.playGame(program, false,false);
 			}
 			else { // play against a GP individual
 				int idx = (int) (Math.random() * pop.length());
 				ProgramGene<Double> opponent = pop.get(idx).getGene();
-				res = game.playGame(program, opponent);
+				res = game.playGame(program, opponent,false);
 			}
 			winScore += res.winScore;
 			if (strategic && res.winScore > 0)

@@ -176,16 +176,16 @@ public class PatchWork extends JFrame {
 			if (random)
 			{
 				res = game.playGame(program, true,false);
-				System.out.println("Done random");
+				//System.out.println("Done random");
 			}
 			else if (strategic)
 			{
 				res = game.playGame(program, false,true);
-				System.out.println("Done strategic");
+				//System.out.println("Done strategic");
 			}
 			else
 			{
-				res = game.playGame(program, opponent,false);
+				res = game.playGame(program, opponent,j == 100);
 			}
 			int score = res.ourPlayerButtons - 2 * (81 - res.ourPlayerFilledCells);
 			sumScore += score;
@@ -275,7 +275,7 @@ public class PatchWork extends JFrame {
 							// Program tree depth.
 							INIT_DEPTH,
 							// Chromosome validator.
-							ch -> (ch.getRoot().size() >= INIT_DEPTH && ch.getRoot().size() <= MAX_DEPTH),
+							ch -> ch.getRoot().size() >= INIT_DEPTH,
 							OPERATIONS,
 							TERMINALS
 					)),

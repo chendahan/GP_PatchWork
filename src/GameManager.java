@@ -1,11 +1,14 @@
 import io.jenetics.prog.ProgramGene;
 
-import java.util.ArrayList;
+
+
+import java.util.ArrayList; 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class GameManager {
     private static int boardSize = 50;
@@ -318,7 +321,7 @@ public class GameManager {
 		for (int i=0; i<terminals.length;i++)
 		{
 		
-			if(terminals[i]>1)
+			if(terminals[i]>1 && i!=6)
 				System.out.println("terminal is too big ! : index: "+i+", value is "+ terminals[i]+", option is: "+option);
 		}
 		
@@ -355,12 +358,13 @@ public class GameManager {
 							terminals[3]= (double)(countCoveredFrame(copy)/32);
 							terminals[4]= (double)(pieceShape.size()/8);
 							terminals[5]= (double)(countFreeCells(copy)/81);
-							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))/8;
+							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))*2;
 							terminals[7] = (double)(countEnclosedCells(copy))/24;
 							terminals[8] = (double)(piece.getButtons()/3);
 							terminals[9] = (double)(piece.getCost()/10);
 							terminals[10] = (double)(player.getLastButtonIndex()/9);
 							terminals[11] = (double)(opponent.getPosition()/50);
+							//System.out.println("terminal 6 : "+terminals[6]);
 							checkTerminals(terminals,1);
 							double res = program.apply(terminals);
 							if (!init_max_res) {
@@ -418,7 +422,9 @@ public class GameManager {
 	{
 		int count=0;
 		List<Dot> pieceShapCopy=new ArrayList<Dot>();
-		HashMap<Integer,Integer> hashres=new HashMap<>(); 
+		HashMap<Integer, List<Integer>>hashEmpty=new HashMap<Integer, List<Integer>>();
+		HashMap<Integer, List<Integer>>hashAll=new HashMap<Integer, List<Integer>>();
+        
 		for(Dot dot:pieceShape)
 			pieceShapCopy.add(new Dot(dot.getRow(),dot.getColumn()));
 		
@@ -431,7 +437,26 @@ public class GameManager {
 			{
 				if (!board.getCell(dot.getRow(),dot.getColumn()))
 				{
-					hashres.put(dot.getRow(), dot.getColumn());
+					if(hashEmpty.containsKey(dot.getRow()))
+					{
+						if(!hashEmpty.get(dot.getRow()).contains(dot.getColumn()))
+							hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+					else
+					{
+						hashEmpty.put(dot.getRow(), new ArrayList<Integer>());
+						hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+				}
+				if(hashAll.containsKey(dot.getRow()))
+				{
+					if(!hashAll.get(dot.getRow()).contains(dot.getColumn()))
+						hashAll.get(dot.getRow()).add(dot.getColumn());
+				}
+				else
+				{
+					hashAll.put(dot.getRow(), new ArrayList<Integer>());
+					hashAll.get(dot.getRow()).add(dot.getColumn());
 				}
 			}
 		}		
@@ -443,7 +468,26 @@ public class GameManager {
 			{
 				if (!board.getCell(dot.getRow(),dot.getColumn()))
 				{
-					hashres.put(dot.getRow(), dot.getColumn());
+					if(hashEmpty.containsKey(dot.getRow()))
+					{
+						if(!hashEmpty.get(dot.getRow()).contains(dot.getColumn()))
+							hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+					else
+					{
+						hashEmpty.put(dot.getRow(), new ArrayList<Integer>());
+						hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+				}
+				if(hashAll.containsKey(dot.getRow()))
+				{
+					if(!hashAll.get(dot.getRow()).contains(dot.getColumn()))
+						hashAll.get(dot.getRow()).add(dot.getColumn());
+				}
+				else
+				{
+					hashAll.put(dot.getRow(), new ArrayList<Integer>());
+					hashAll.get(dot.getRow()).add(dot.getColumn());
 				}
 			}
 			dot.setRow(dot.getRow()+1);
@@ -457,7 +501,26 @@ public class GameManager {
 			{
 				if (!board.getCell(dot.getRow(),dot.getColumn()))
 				{
-					hashres.put(dot.getRow(), dot.getColumn());
+					if(hashEmpty.containsKey(dot.getRow()))
+					{
+						if(!hashEmpty.get(dot.getRow()).contains(dot.getColumn()))
+							hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+					else
+					{
+						hashEmpty.put(dot.getRow(), new ArrayList<Integer>());
+						hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+				}
+				if(hashAll.containsKey(dot.getRow()))
+				{
+					if(!hashAll.get(dot.getRow()).contains(dot.getColumn()))
+						hashAll.get(dot.getRow()).add(dot.getColumn());
+				}
+				else
+				{
+					hashAll.put(dot.getRow(), new ArrayList<Integer>());
+					hashAll.get(dot.getRow()).add(dot.getColumn());
 				}
 			}
 		}
@@ -469,13 +532,49 @@ public class GameManager {
 			{
 				if (!board.getCell(dot.getRow(),dot.getColumn()))
 				{
-					hashres.put(dot.getRow(), dot.getColumn());
+					if(hashEmpty.containsKey(dot.getRow()))
+					{
+						if(!hashEmpty.get(dot.getRow()).contains(dot.getColumn()))
+							hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+					else
+					{
+						hashEmpty.put(dot.getRow(), new ArrayList<Integer>());
+						hashEmpty.get(dot.getRow()).add(dot.getColumn());
+					}
+				}
+				if(hashAll.containsKey(dot.getRow()))
+				{
+					if(!hashAll.get(dot.getRow()).contains(dot.getColumn()))
+						hashAll.get(dot.getRow()).add(dot.getColumn());
+				}
+				else
+				{
+					hashAll.put(dot.getRow(), new ArrayList<Integer>());
+					hashAll.get(dot.getRow()).add(dot.getColumn());
 				}
 			}
 		}
-		if(hashres.size()>7)
-			System.out.println("countEmptySurrounding: size bigger then 7: "+hashres.size());
-		return hashres.size();
+		
+		/*System.out.println("hashEmpty.size "+ hashEmpty.size()+ " hashAll.size "+hashAll.size()+" board :");
+		this.ourPlayer.printBoard();
+		for(Entry<Integer, Integer>  ent:hashAll.entrySet())
+		{
+			System.out.println("key: "+ent.getKey()+ " val: "+ent.getValue());
+		}*/
+		int hashEmptySize=0,hashAllSize=0;
+		
+		for (Entry<Integer, List<Integer>> entry:hashEmpty.entrySet())
+		{
+			hashEmptySize+=entry.getValue().size();
+		}
+
+		for (Entry<Integer, List<Integer>> entry:hashAll.entrySet())
+		{
+			hashAllSize+=entry.getValue().size();
+		}
+		
+		return hashEmptySize/hashAllSize;
 	}
 
 	public Results getResults(Player opponent, Player gpPlayer)

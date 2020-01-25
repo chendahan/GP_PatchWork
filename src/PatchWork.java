@@ -45,10 +45,10 @@ public class PatchWork extends JFrame {
 	public static final int POPULATION_SIZE    = 400;
 	public static final double MUTATION_PROB   = 0.001;
 	public static final double CROSSOVER_PROB  = 0.7;
-	public static final int MAX_GENERATIONS    = 100;
+	public static final int MAX_GENERATIONS    = 50;
 	public static final int MAX_DEPTH    = 15;
 	public static final int INIT_DEPTH    = 4;
-	public static final int NUM_GAMES = 50;
+	public static final int NUM_GAMES = 100;
 	public static final int TOUR_SIZE = 3;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
@@ -117,7 +117,7 @@ public class PatchWork extends JFrame {
 			MathOp.MUL,
 			MathOp.MIN,
 			MathOp.MAX,
-			MathOp.NEG
+			MathOp.NEG,
 			MathOp.GT
 	);
 

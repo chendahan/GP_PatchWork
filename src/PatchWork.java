@@ -47,8 +47,8 @@ public class PatchWork extends JFrame {
 	public static final double CROSSOVER_PROB  = 0.7;
 	public static final int MAX_GENERATIONS    = 50;
 	public static final int MAX_DEPTH    = 15;
-	public static final int INIT_DEPTH    = 4;
-	public static final int NUM_GAMES = 100;
+	public static final int INIT_DEPTH    = 8;
+	public static final int NUM_GAMES = 30;
 	public static final int TOUR_SIZE = 3;
 
 	private static final AtomicReference<ISeq<Genotype<ProgramGene<Double>>>> POP = new AtomicReference<>();
@@ -275,7 +275,7 @@ public class PatchWork extends JFrame {
 							// Program tree depth.
 							INIT_DEPTH,
 							// Chromosome validator.
-							ch -> ch.getRoot().size() <= MAX_DEPTH,
+							ch -> (ch.getRoot().size() >= INIT_DEPTH && ch.getRoot().size() <= MAX_DEPTH),
 							OPERATIONS,
 							TERMINALS
 					)),
@@ -304,7 +304,7 @@ public class PatchWork extends JFrame {
 
 	private static double print_best(Phenotype<ProgramGene<Double>, Double> phenotype){
 		System.out.println("Best in gen " + gen + " fitness : " + phenotype.getFitness());
-		System.out.println("Best in gen " + gen + " tree: " + phenotype.getGenotype());
+		System.out.println("Best in gen " + gen + " tree: " + Tree.toString(phenotype.getGenotype().getGene()));
 		return phenotype.getFitness();
 	}
 

@@ -329,6 +329,7 @@ public class GameManager {
 
 	public void makeMove(final ProgramGene<Double> program, Player player, Player secondPlayer,Boolean printBoard)
 	{
+		boolean _break = false;
 		List<Piece> pieces = getNextPiecesAvailableToSelect();
 		int index = pieceIndex;
 		PlayerBoard board = player.getPlayerBoard();
@@ -351,28 +352,53 @@ public class GameManager {
 							PlayerBoard copy = new PlayerBoard(board); // copy board for simulation
 							copy.placePiece(piece, pieceShape, dot); // simulate placement
 							int new_pos = Math.min(boardSize-1, player.getPosition() + piece.getTime());
+							if (printBoard) {
+//								System.out.println(piece.getId());
+//								copy.print();
+							}
+							double a, b, c, d, e, f, g, h, k, l, m, n;
 							terminals[0] = (double)(new_pos)/50; // new position
+							a = terminals[0];
 							terminals[1] = (double)(countNewButtons(new_pos, player, false) -
 											piece.getCost())/100; // new amount of buttons
-							terminals[2]= (double)(countEmptyCorners(copy)/4);
-							terminals[3]= (double)(countCoveredFrame(copy)/32);
-							terminals[4]= (double)(pieceShape.size()/8);
-							terminals[5]= (double)(countFreeCells(copy)/81);
-							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot))*2;
+							b =terminals[1];
+							terminals[2]= (double)(countEmptyCorners(copy))/4;
+							c = terminals[2];
+							terminals[3]= (double)(countCoveredFrame(copy))/32;
+							d = terminals[3];
+							terminals[4]= (double)(pieceShape.size())/9;
+							e = terminals[4];
+							terminals[5]= (double)(countFreeCells(copy))/81;
+							d = terminals[5];
+							terminals[6]= (double)(countEmptySurrounding(board,pieceShape,dot));
+							e = terminals[6];
 							terminals[7] = (double)(countEnclosedCells(copy))/24;
-							terminals[8] = (double)(piece.getButtons()/3);
-							terminals[9] = (double)(piece.getCost()/10);
-							terminals[10] = (double)(player.getLastButtonIndex()/9);
-							terminals[11] = (double)(opponent.getPosition()/50);
-							//System.out.println("terminal 6 : "+terminals[6]);
+							f = terminals[7];
+							terminals[8] = (double)(piece.getButtons())/3;
+							g = terminals[8];
+							terminals[9] = (double)(piece.getCost())/10;
+							h = terminals[9];
+							terminals[10] = (double)(player.getLastButtonIndex())/9;
+							k = terminals[10];
+							terminals[11] = (double)(opponent.getPosition())/50;
+							l = terminals[11];
 							checkTerminals(terminals,1);
+//							if (printBoard) {
+//								for (int v = 0; v < 12; v++)
+//									System.out.print(terminals[v] + " ");
+//								System.out.println();
+//							}
 							double res = program.apply(terminals);
+//							if (printBoard)
+//								System.out.println("res : "+res);
 							if (!init_max_res) {
+//								System.out.println(" max res : "+max_res);
 								init_max_res = true;
 								max_res = res;
 								chosenPiece = new PieceAndCoord(piece, dot, pieceShape, index);
 								firstOption = true;
 							} else if (res > max_res) {
+//								System.out.println(" max res : "+max_res);
 								max_res = res;
 								chosenPiece = new PieceAndCoord(piece, dot, pieceShape, index);
 								firstOption = true;
@@ -399,7 +425,7 @@ public class GameManager {
 			terminals[8] = (double)(0);
 			terminals[9] = (double)(0);
 			terminals[10] = (double)(player.getLastButtonIndex())/9;
-			terminals[11] = (double)(opponent.getPosition()/50);
+			terminals[11] = (double)(opponent.getPosition())/50;
 			checkTerminals(terminals,2);
 			double res = program.apply(terminals);
 			if (!init_max_res || res > max_res) { // could be if player has no buttons to buy more pieces
@@ -574,7 +600,7 @@ public class GameManager {
 			hashAllSize+=entry.getValue().size();
 		}
 		
-		return hashEmptySize/hashAllSize;
+		return (double)hashEmptySize/(double)hashAllSize;
 	}
 
 	public Results getResults(Player opponent, Player gpPlayer)
